@@ -1,0 +1,1584 @@
+TOTAL PAGES: 15
+
+=== PAGE 1 ===
+1 
+ 
+IO-VNBD: Inertial and Odometry Benchmark Dataset 
+for Ground Vehicle Positioning 
+Uche Onyekpe 1,3*, Vasile Palade3, Stratis Kanarachos 2 and Alicja Szkolnik4 
+1 Institute for Future Transport and Cities, Coventry University, Coventry, United Kingdom 
+2 Faculty of Engineering and Computing, Coventry University, Coventry, United Kingdom 
+3 Research Center for Data Science, Coventry University, Coventry, United Kingdom 
+4 Coventry University, Gulson Road, Coventry, United Kingdom 
+onyekpeu@uni.coventry.ac.uk, ab8522@coventry.ac.uk, ab5839@coventry.ac.uk, szkolnia@uni.coventry.ac.uk   
+Abstract  – Low-cost inertial navigation sensors (INS) can be exploited for a reliable tracking solution for autonomous 
+vehicles. However, position  errors grow exponentially due to noises in the measurements. Several deep learning 
+techniques have been investigated to mitigate the errors for a better navigation solution [1-10]. However, these studies 
+have involved the use of different datasets not made publicly available. Th e lack of a robust benchmark dataset has 
+thus hindered the advancement in the research , comparison  and adoption of deep learning techniques for vehicle 
+positioning  based on inertial navigation . In order to facilitate the benchmarking, fast development and evaluation of  
+positioning algorithms, we there fore present the first of its kind large-scale and information -rich inertial and odometry 
+focused public dataset called IO -VNBD ( Inertial Odometry Vehicle Navigation Benchmark Dataset) .The vehicle 
+tracking  dataset was recorded  using a research vehicle equi pped with ego -motion sensors on public roads in the 
+United Kingdom, Nigeria, and France. The sensors include a GPS receiver, inertial navigation sensors, wheel -speed 
+sensors amongst other sensors found on the car as well as the inertial navigation sensors and GPS receiver in an 
+android smart phone sampling at 10HZ. A diverse number of scenarios and vehicle dynamics are captured such as 
+traffic, round -abouts, hard -braking etc. on different road types (country roads, motorways etc.) with varying driving 
+patte rns. The dataset consis ts of a total driving time of about 40  hours over 1,300km for the vehicle extrac ted data 
+and about 58  hours over  4,400  km for the smartphone recorded data. We hope that this dataset will prove valuable in 
+furthering research on the c orrelation between vehicle dynamics and its displacement as well as other related studies.  
+Keywords – Inertial navigation, INS, dataset, Wheel Speed, ECU dataset, autonomous driving, GPS loss, benchmark, tracking, 
+Vehicular Navigation, Positioning, INS/GPS, Deep Learning, Odometry  
+Introduction 
+Recent advancements in machine learning has been facilitated by the availability of large and diverse 
+datasets [12], [13]. Due to the urge for the development of information ri ch databases that will allow 
+benchmarking and thus the fast development and evaluation of positioning algorithms [14], we contribute 
+towards the advancement of autonomous vehicle and robotics research by presenting the largest and most 
+diverse inertial dataset published. Using ego -motion sensors such as accelerometers, gyroscope, 
+magnetometers, wheel encoders, force sensors etc., this dataset provides positioning and dynam ics 
+information of several vehicles driven in and across several cities in England, Nigeria and France. 
+The dataset presented provides features describing the state of the vehicle’s motion under a range of driving 
+and environmental scenarios such as varying longitudinal accelerations, hard-brakes, yaw velocities, mud 
+roads, motorway etc. (see Table 2), with information from a wide range of sensors, as shown on Tables A1-
+1 to A7.  
+                        
+Figure 1 Smartphone and GPS antennae setup                                               Figure 2 Smartphone sensor axis 
+Direction of travel in positive x 
+* Corresponding author Uche Onyekpe: onyekpeu@uni.coventry.ac.uk 
+
+=== PAGE 2 ===
+2 
+ 
+ 
+Furthermore, the dataset which is the first of its kind focused on inertial vehicle navigation under complex 
+environmental scenarios and vehicle motion states with a rich combination of sensors  is relevant in 
+furthering research in areas not limited to the positioning or tracking of vehicles using noisy low -cost 
+sensors and evaluation of positioning algorithms and techniques on noisy sensor measurements. The 
+labelled dataset is also suitable for the robust training of supervised learning algorithms in learning the 
+correlation between the dynamics of vehicles and its displacement with applications in the tracking or 
+positioning of vehicles in GPS deprived environments. 
+ 
+Equipments 
+ Racelogic VBOX Video HD2 CAN – Bus data logger (10Hz) [15] 
+ Racelogic VBOX Video HD2 GPS Antenna (10Hz)[15] 
+ Huawei P20 pro, Motorola moto G7 power and Blackberry Priv using AndroSensor Application 
+(10Hz). 
+ 
+Experiment Setup 
+Vehicle E xperiment Setup 
+The vehicle used for the data collection exercise was a front wheel drive Ford Fiesta Titanium as shown in 
+Figure 3. A Racelogic VBOX Video HD2 was used to record the data from the vehicle CAN bus as well as 
+the corresponding GPS coordinates at each sampling instance. As shown in F igures 1 and 3, the GPS 
+antenna was placed centrally at the top of the vehicle to ensure optimal signal reception. The Racelogic 
+VBOX Video HD2 CAN – Bus data logger (10Hz) was used to record the data shown in Table 3 directly 
+from the CAN Bus of the vehicle with a sampling and update frequency of 10Hz.  
+ 
+Figure 3 Sensor locations and dimension of vehicle[16] 
+Smartphone Measurement Setup 
+Four vehicles; a Ford Fiesta Titanium, Volvo XC70, Renault Megane and Toyota Corolla Verso were used 
+to collect the smartphone datasets. The smartphone was held with a phone holder attached to the vehicle as 
+shown in figure 1. Using the Androsensor app, all data were sampled every tenth of a second with a GPS 
+(smartphone) update rate of 1Hz. Figure 2 shows the axis alignment of the smartphone sensors . The 
+smartphone sensors employed were: a 3-axis accelerometer, a 3-axis gyroscope, a 3-axis magnetometer and 
+heading as well as the GPS latitude and longitude coordin ates all present within the phone. Other 
+information such as the vehicles velocity and acceleration were recorded from the smartphones GPS. Table 
+4 highlights the data recorded from the smartphone data. The datasets described in Tables A1-1 to A6 were 
+collected using the Huawei P20 pro smartphone.
+
+
+=== PAGE 3 ===
+3 
+ 
+Data Description 
+The total dataset consists of about 100 hours of recorded driving data on public roads by 8 different drivers 
+with different driving styles as defined on Table 1. The data is divided into sets based on cities and towns 
+driven via, road conditions, weather conditions, driving length and time, driving style and driving features 
+(see Tables A1-1 to A7 ). The dataset also contains more than 20 minutes of data recorded from the 
+stationary vehicle to aid in the estimation of the sensors bias. To add to the diversity of the data consisting 
+of a number of complex driving scenarios as shown on Table 2, the data was recorded with different tyre 
+pressures. Datasets with each unique tyre pressures are indicated in Tables A1-1 to A6 using Table 5 as a 
+guide. Tables A1-1 to A7 reveal more detailed information on each sets of the data. The  data logged from 
+the vehicles CAN bus are denoted with the prefix “V-“ and the smartphone data denoted with the prefix “S-
+“. The “S-“ datasets are acquired from the sensors in a smartphone attached to the vehicle mimicking its 
+motion*. While all the “V-“ datasets were collected only in England, the “S-“ datasets were collected in 
+England, France and Nigeria.  
+Over the course of the data collection, communication difficulties between the GPS receiver and satellites 
+were encountered. Information on data indexes recorded during these periods are provided in as well in a 
+txt file. Where possible, the “S-“ and “V-“ datasets which were collected simultaneously1 are manually 
+synchronised and stored in the folder named “Synchronised V and S datasets”.  
+Importantly, despite the effort lent towards an accurate alignment of the smartphones sensor axis with that 
+of the vehicle, the precision of the measurement were interfered by vehicular vibrations. Information on the 
+amount of gravitational acceleration measured by each of the three axis are provided in the “S-“ datasets to 
+help in the correction of the measured acceleration. The data is stored in csv format in 
+https://github.com/onyekpeu/IO-VNBD along with useful python development tools.   
+Table 1 Driving pattern of each driver 
+Driver  Driving Style 
+A Defensive 
+B Defensive 
+C Defensive 
+D Defensive 
+E Aggressive 
+F Defensive 
+G Defensive 
+H Defensive 
+                                                                 
+* It is  difficult to truly determine the centre of gravity of the car under different dynamic conditions, hence the s martphone 
+recording approximates the true motion of the car.  
+1 Not all “V -“ and “S-“ dataset were collected simultaneously. All the “V-“ datasets without a corresponding “S-“ dataset and 
+vice -versa are not placed in the “Synchronised V and S datasets” folder. 
+
+=== PAGE 4 ===
+4 
+ 
+ 
+Table 2 Environmental and driving scenarios investigated 
+No Scenarios 
+1 Hard Brake 
+2 Sharp Turn Left and Right 
+3 Swift Maneuvers 
+4 Round-about 
+5 Rain 
+6 Night and Day 
+7  Skid 
+8 Mountain/Hills 
+9 Dirt Roads/ Gravel Roads 
+10 Country Roads 
+11 Motorway 
+12 Town Centre driving 
+13 Traffic Congestion 
+14 Successive left and right turns 
+15 Varying Accelerations within a 
+short duration 
+16 A -Roads 
+17 B- Roads 
+18 Wet roads 
+19 U-turns / Reverse drives 
+20  Mud Road  
+21 Varying Tyre Pressure 
+22 Drifts 
+23 Bumps 
+24 Inner City driving  
+25 Winding Roads 
+26 Zig-Zag drives 
+27 Approximate Straight-line Motion 
+28 Parking 
+29 Potholes 
+30 Residential Roads 
+31 Stationary (No Motion) 
+32 Valley 
+Table 3 Information recorded from the Ford Fiesta's ECU 
+No Column Heading  Unit 
+1 No of GPS satellites 
+available  
+N/A 
+2 Time since start of day Seconds  
+3 Latitude  degrees 
+4 Longitude  degrees 
+5 velocity  kmh 
+6 Heading  degrees 
+7 Height  km 
+8 Vertical velocity  Km/hr 
+9 Sampleperiod seconds 
+10 Steering Angle degrees 
+11 Wheel Speed Front Left Rad/sec 
+12 Wheel Speed Front Right Rad/sec 
+13 Wheel Speed Rear Left Rad/sec 
+14 Wheel Speed Rear Right Rad/sec 
+15 Yaw Rate Deg/sec 
+16 Indicated Vehicle Speed Km/hr 
+17 Indicated Longitudinal 
+Acceleration 
+g 
+18 Indicated Lateral 
+Acceleration 
+g 
+19 Handbrake Activated or not (0 
+or 1) 
+20 Gear Requested Number of gear 
+employed (1-5) 
+21 Gear Number of gear 
+employed (1-5) 
+22 Engine Speed Rev/min 
+23 Coolant Temperature Degree celcius 
+24 Clutch Position Activated or not (0 
+or 1) 
+25 Brake Pressure PSI 
+26 Brake Position Activated or not (0 
+or 1) 
+27 Battery Voltage Volts 
+28 Air Temperature Degrees celcius 
+29 Accelerator Pedal Position % activation 
+ 
+
+=== PAGE 5 ===
+5 
+ 
+Table 4 Information recorded from the smartphone sensors  
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+Conclusion 
+This paper presents a dataset with complex driving and environmental scenarios for autonomous vehicle 
+navigation research. It is our hope that the dataset will be useful in the development, evaluation and testing 
+of positioning and tracking algorithms and techniques on noisy low –cost sensor data. The dataset could 
+also find use in modelling the relationship between the vehicle’s position and its dynamics and other similar 
+studies. In total, the dataset consists of about 5,700 km of data over 98 hours of driving time. 
+In the future, the collection of data under more challenging scenarios will be  investigated. Also, a 
+benchmark platform will be created for the performance comparison of positioning algorithms and 
+techniques. 
+Acknowledgements 
+We would like to thank Mr Andy Thompson, Mr Thierry Touzet, Miss Sarah Tomkins, Mr Yannick Weber, 
+Dr. Maciej Cieslak and Google LLC for their help on the project. 
+No Column Heading Unit 
+1 GPS Latitude degrees 
+2 GPS Longitude degrees 
+3 GPS  Altitude m 
+4 GPS  Speed Kmh 
+5 GPS  Accuracy m 
+6 GPS Orientation Â° 
+7 GPS Satellites In 
+Range 
+N/A 
+8 Time Since Start ms 
+9 Date YYYY-MO-DD 
+HH-MI-SS_SSS 
+10 Accelerometer X m/s² 
+11 Accelerometer Y m/s² 
+12 Accelerometer Z m/s² 
+13 Gravity X m/s² 
+14 Gravity Y m/s² 
+15 Gravity Z m/s² 
+16 Gyroscope (Yaw) rad/s 
+17 Gyroscope (Pitch) rad/s 
+18 Gyroscope (Pitch) rad/s 
+19 Magnetic Field X Î¼T 
+20 Magnetic Field Y Î¼T 
+21 Magnetic Field Z Î¼T 
+22 Orientation (Yaw) Â° 
+23 Orientation (Roll) Â° 
+24 Orientation (Pitch) Â° 
+Table 5 Various Tyre pressures experimented on 
+Notation Tyre Pressure (Psi) 
+A 
+ 
+Front right - 16 
+Front left - 15 
+Rear right - 14 
+Rear left - 14 
+B 
+ 
+ 
+Front right - 31 
+Front left - 31 
+Rear right - 25 
+Rear left - 25 
+C 
+ 
+Front right - 33 
+Front left - 33 
+Rear right - 31 
+Rear left - 27 
+D 
+ 
+Front right - 33 
+Front left - 33 
+Rear right - 26 
+Rear left - 26 
+E 
+ 
+Front right – N/A 
+Front left -  N/A 
+Rear right – N/A 
+Rear left – N/A 
+ 
+
+=== PAGE 6 ===
+6 
+ 
+References 
+[1] H. fa Dai, H. wei Bian, R. ying Wang, and H. Ma, “An INS/GNSS integrated navigation in GNSS denied environment 
+using recurrent neural network,” Def. Technol., 2019. 
+[2] W. Fang et al., “A LSTM Algorithm Estimating Pseudo Measurements for Aiding INS during GNSS Signal Outages,” 
+Remote Sens., vol. 12, no. 2, p. 256, Jan. 2020. 
+[3] R. Sharaf, A. Noureldin, A. Osman, and N. El-Sheimy, “Online INS/GPS integration with a radial basis function neural 
+network,” IEEE Aerosp. Electron. Syst. Mag., vol. 20, no. 3, pp. 8 –14, Mar. 2005. 
+[4] A. Noureldin, R. Sharaf, A. Osman, and N. El-Sheimy, “INS/GPS data fusion technique utilizing radial basis functions 
+neural networks,” pp. 280–284, 2004. 
+[5] A. Noureldin, A. El-Shafie, and M. Bayoumi, “GPS/INS integration utilizing dynamic neural networks for vehicular 
+navigation,” Inf. Fusion, vol. 12, no. 1, pp. 48 –57, 2011. 
+[6] M. Malleswaran, S. Angel Deborah, S. Ma njula, and V. Vaidehi, “Integration of INS and GPS using radial basis 
+function neural networks for vehicular navigation,” 11th Int. Conf. Control. Autom. Robot. Vision, ICARCV 2010, no. 
+January, pp. 2427–2430, 2010. 
+[7] M. Malleswaran, V. Vaidehi, A. Saravanaselvan, and M. Mohankumar, “Performance analysis of various artificial 
+intelligent neural networks for GPS/INS Integration,” Appl. Artif. Intell., vol. 27, no. 5, pp. 367 –407, 2013. 
+[8] M. Malleswaran, V. Vaidehi, S. Manjula, and S. A. Deborah, “Performance comparison of HONNs and FFNNs in GPS 
+and INS integration for vehicular navigation,” Int. Conf. Recent Trends Inf. Technol. ICRTIT 2011, no. June, pp. 223–
+228, 2011. 
+[9] M. Malleswaran, V. Vaidehi, and S. A. Deborah, “CNN based GPS/INS data integration using new dynamic learning 
+algorithm,” Int. Conf. Recent Trends Inf. Technol. ICRTIT 2011, no. June, pp. 211–216, 2011. 
+[10] K.-W. Chiang and N. El-Sheimy, “INS/GPS Integration using Neural Networks for Land Vehicle Navigation 
+Applications.” pp. 535–544, 27-Sep-2002. 
+[11] K. Chiang, “INS / GPS Integration Using Neural Networks for Land Vehicular Navigation UCGE Reports Number 
+20209 Department of Geomatics Engineering INS / GPS Integration Using Neural Networks for Land Vehicular 
+Navigation Applications by Kai-Wei Chiang,” no. April, 2004. 
+[12] A. Krizhevsky, I. Sutskever, and G. E. Hinton, “ImageNet Classification with Deep Convolutional Neural Networks.”  
+[13] C. Chen, X. Lu, A. Markham, and N. Trigoni, “IONet: Learning to Cure the Curse of Drift in Inertial Odometry,” pp. 
+6468–6476, 2018. 
+[14] S. Kanarachos, S. R. G. Christopoulos, and A. Chroneos, “Smartphones as an integrated platform for monitoring driver 
+behaviour: The role of sensor fusion and connectivity,” Transportation Research Part C: Emerging Technologies, vol. 
+95. Elsevier Ltd, pp. 867–882, 01-Oct-2018. 
+[15] “VBOX Video HD2.” [Online]. Available: https://www.vboxmotorsport.co.uk/index.php/en/products/video -
+loggers/vbox-video. [Accessed: 25 -Feb-2020]. 
+[16] “Ford Fiesta Interior Dimensions - Our Houzz.” [Online]. Available: http://ourhouzz.site/ford -fiesta-interior-dimensions. 
+[Accessed: 25-Feb-2020]. 
+ 
+ 
+
+=== PAGE 7 ===
+7 
+ 
+ 
+Appendix 
+ 
+Table A1-1 Dataset description from Driver A, B and C 
+Driv er Dataset 
+name  
+Features  Cities and 
+T owns 
+covered  
+Weather Conditions Collection  
+Date  
+Velocity and 
+acceleration range 
+ 
+T otal time driven  and 
+distance covered  
+T otal 
+number of 
+data points  
+Corresponding 
+Smartphone 
+Dataset  
+A 
+ 
+ 
+ 
+ 
+ 
+V-S1 B-Road(B4101), Round-About (x9), 
+Reverse (x5), Hilly Road, A4053(Ring 
+Road), Hard Brake, Tyre Pressure - E 
+Coventry  15 / 4 °C, Sunny, 
+Humidity:73%,  
+Wind:2.486 mph N 
+ 
+08/09/2019  0.0 - 93.8 km/hr,  
+-.59 - 0.34 g 
+86.3 mins ,  
+38.16 km  
+51790  S-S1 
+V-S2 B-Road(B4112, B4065), Round-About 
+(x18), Reverse (x8), Motorway, Dirt Road, 
+U-Turn (x5), Country Road, Successive 
+Left -Right Turns, Hard Brake, A-Roads 
+(A4600) , Tyre Pressure - E 
+Coventry, 
+Nuneaton 
+17 / 15 °C Passing 
+clouds. 
+Humidity:47% 
+Wind:3.728 mph N 
+ 
+08/09/2019  0.0 - 105.2 km/hr,  
+-0.56 - 0.43 g 
+156.5 mins,  
+75.64 km  
+93900  S-S2 
+V-S3a Round-About (x15), U-turn/Reverse (x4), 
+Motorway (M6), A-Road(A4600, A426), 
+Hard Brake, Zig-Zag, Country Roads, 
+Change in Speed, Night-time, Sharp Turn 
+Left/Right, Tyre Pressure - E 
+Coventry, 
+Rugby 
+17 / 12 °C, Passing 
+clouds. 
+Humidity:65% 
+Wind:6.836 mph W 
+ 
+04/09/2019  0.0 - 98.0 km/hr,  
+-0.57 - 0.4 g 
+41.1 mins ,  
+26.0 km  
+24660  S-S3a 
+V-S3b Successive Left-Right Turns (x21), 
+Reverse/U-Turns (x1) , Tyre Pressure - E 
+Rugby 04/09/2019  0.0 - 44.8 km/hr,  
+-0.37 - 0.3 g 
+11.4 mins ,  
+3.8 km  
+6840  S-S3b 
+V-S3c Round About(x4), A-Road (A428), Cou ntry 
+Roads, Tyre Pressure - E 
+Rugby, 
+Coventry  
+04/09/2019  0.0 - 117.1 km/hr,  
+-0.36 - 0.35 g 
+62.0 mins ,  
+44.28 km  
+37220  S-S3c 
+V-S4 Round-About (x14), U-turn,  A-Road, 
+Successive Left-Right Turns, Zig-Zag,  
+Change in Speed, Night-time, A-Road 
+(A429, A45, A46), Ring Road (A4053) , 
+Tyre Pressure - E 
+Coventry  13 / 12 °C, Passing 
+clouds. 
+Humidity:83% 
+Wind:8.078 mph WNW 
+ 
+ 
+06/09/2019  0.0 - 109.6 km/hr,  
+-0.48 - 0.41 g 
+163.0 mins,  
+93.9 km  
+97824  S-S4 
+B V-M Round-About (x30), Successive Left-Right 
+Turn s, Hard Brake (x21), Zig-Zag (x5), 
+Country Roads, Sharp Turn Left/Right, 
+Daytime, U-Turn (x1), U-Turn Reverse (x7) 
+, Tyre Pressure - E 
+Coventry  15 / 12 °C, Partly 
+sunny. 
+Humidity:80% 
+Wind:8.078 mph NW 
+ 
+ 
+07/09/2019  0.0 - 100.7 km/hr,  
+-1.01 - 0.44 g 
+176.7 mins,  
+105.44 km  
+105995  S-M 
+C 
+ 
+ 
+ 
+V-St1 Roundabout (x9), A-Road (A452), B-Road, 
+Car park Navigation, Tyre Pressure - E 
+Coventry, 
+Kenilworth  
+13 / 10 °C, Passing 
+clouds. 
+Humidity:56% 
+Wind:7.457 mph ESE 
+01/04/2019  0.0 - 73.3 km/hr,  
+-0.39 - 0.45 g 
+95.4 mins ,  
+47.05 km  
+57213  N/A 
+ 
+
+=== PAGE 8 ===
+8 
+ 
+Driv er Dataset 
+name  
+Features  Cities and 
+T owns 
+covered  
+Weather Conditions Collection 
+Date  
+Velocity and 
+acceleration range 
+ 
+T otal time driven  and 
+distance covered  
+T otal 
+number of 
+data points  
+Corresponding 
+Smartphone 
+Dataset  
+C V-St4 Round About(x1), A-Road (A4114, A444, 
+A46), Motorway (M40), Tyre Pressure - E 
+Coventry, 
+Warwick, 
+Chesterton  
+9 / 4 °C 
+Scattered clouds. 
+Humidity:72% 
+Barometer:991 mbar 
+W 
+Wind:12.428 mph 
+ 
+04/03/2019  0.0 - 101.4 km/hr,  
+-0.27 - 0.13 g 
+22.7 mins ,  
+28.48 km  
+1359 1 N/A 
+V-St6 Motorway(M40), Daytime, Tyre Pressure - 
+E 
+Stokenchu rch, 
+Headington  
+Oxford 
+11 / 9 °C, Passing 
+clouds. 
+Humidity:62% 
+Wind:10.564 mph SSW 
+05/03/2019  0.0 - 122.1 km/hr,  
+-0.32 - 0.35 g 
+85.6 mins ,  
+113.63 km  
+51360  N/A 
+V-St7 Motorway(M40), Residential roads, A-
+Road (A46), Tyre Pressure - E 
+Stokenchu rch, 
+Headington  
+Oxford,  
+Coventry, 
+Kenilworth, 
+Warwick 
+7 / 6 °C 
+Light rain. Partly 
+sunny. 
+Humidity:85% 
+Wind:14.914 mph W 
+ 
+07/03/2019  0.0 - 117.9 km/hr,  
+-0.3 - 0.3 g 
+74.0 mins ,  
+90.06 km  
+44427  N/A 
+D 
+ 
+V-Y1 Round-About (x20), Succesive Left-Right 
+Turns, Hard Brake, Zigzag, Sharp Turn 
+Left/Right, Reverse/U-Turn (x8), Tyre 
+Pressure - E 
+Coventry  22 / 16 °C, Passing 
+clouds. 
+Humidity:74% 
+Wind:6.836 mph SSW 
+ 
+30/08/2019  0.0 - 87.5 km/hr,  
+-0.85 - 0.36 g 
+117.2 mins,  
+60.86 km  
+70341  S-Y1 
+V-Y2 Round About(x9), U-Turn/Reverse(x1), A-
+Road, B-Road, Country Road, Tyre 
+Pressure - E 
+Coventry, 
+Keniltworth  
+7 / 6 °C 
+Light rain. Partly 
+sunny. 
+Humidity:85% 
+Wind:14.914 mph W 
+ 
+08/03 /2019 0.0 - 73.3 km/hr,  
+-0.39 - 0.45 g 
+95.4 mi ns,  
+47.05 km  
+57213  N/A 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+Table A1-2 Dataset description from Driver C and D 
+
+=== PAGE 9 ===
+9 
+ 
+ 
+Driv er Dataset 
+name  
+Features  Cities and 
+T owns 
+covered  
+Weather 
+Conditions  
+Collection 
+Date  
+Velocity and 
+acceleration range 
+ 
+T otal time driven  and 
+distance covered  
+T otal number 
+of data points 
+Corresponding 
+Smartphone 
+Dataset  
+E 
+ 
+ 
+V-Vta1a Wet Road, Gravel Road, Country Road, 
+Sloppy Roads, Round About (x3), Hard 
+Brake on wet road, Tyre Pressure A 
+Nuneaton,  
+Walton on 
+Trent  
+4-10 / 3-6 °C 
+Passing clouds, 
+Broken Clouds, 
+Scattered Clouds. 
+Humidity:75 -93% 
+SE 
+Wind:4.971 mph 
+14/112019 
+  
+0.0 - 103.4 km/hr,  
+-0.54 - 0.35 g 
+43.0 mins ,  
+40.74 km  
+25821  S-Vta1a 
+V-Vta1b Hard Brakes on Mud, Wet Road, 
+Country Road, Tyre Pressure A 
+Coton in the 
+Elms, 
+Walton on 
+Trent  
+0.1 - 77.7 km/hr,  
+-0.49 - 0.28 g 
+1.6 mins,  
+1.26 km  
+956  S-Vta1b 
+V-Vta2 Round About (x2), A Road (A511, 
+A5121, A444), Country Road, Hard 
+Brake, Tyre Pressure A 
+Walton on 
+Trent, Burton 
+on Trent  
+0.0 - 81.6 km/hr, 
+-0.59 - 0.38 g 
+18.3 mins ,  
+11.07 km  
+10995  S-Vta2 
+V-Vta3 Round-About (x1), Manoeuvres, Tyre 
+Pressure A 
+Burton  on 
+Trent  
+0.0 - 45.8 km/hr,  
+-0.31 - 0.27 g 
+1.5 mins,  
+0.38 km  
+875  S-Vta3 
+V-Vta4 A-Road (A511), Tyre Pressure A Burton on 
+Trent  
+5.9 - 51.7 km/hr,  
+-0.37 - 0.28 g 
+3.0 mins,  
+2.02 km  
+1809  S-Vta4 
+V-Vta5 Round-About (x1), A-Road (A511), 
+Tyre Pressure A 
+Burton on 
+Trent  
+29.2 - 51.1 km/hr, 
+-0.26 - 0.09 g 
+0.6 min ,  
+0.42 km  
+357  S-Vta5 
+V-Vta6 A-Road (A511), Tyre Pressure A Burton on 
+Trent  
+43.8 - 103.9 km/hr,  
+-0.24 - 0.13 g 
+2.3 mins,  
+2.62 km  
+1393  S-Vta6 
+V-Vta7 Round-About (x2), A-Road (A511), 
+Hard Brake, Tyre Pressure A 
+Burton on 
+Trent  
+22.4 - 113.1 km/hr,  
+-0.54 - 0.18 g 
+1.4 mins,  
+1.54 km  
+857  S-Vta7 
+V-Vta8 Town Roads (Build-up), A-Roads 
+(A511), Tyre Pressure A 
+Hatton Derby 0.0 - 77.6 km/hr,  
+-0.45 - 0.3 g 
+6.2 mins,  
+3.43 km  
+3697  S-Vta8 
+V-Vta9 Hard-Brake, A – Road (A50), Tyre 
+Pressure A 
+Derby 48.9 - 87.7 km/hr,  
+-0.6 - 0.14 g 
+0.4 min ,  
+0.43 km  
+226  S-Vta9 
+V-Vta10 Round About (x1), A – Road (A50), 
+Tyre Pressure A 
+Sudbury 
+Ashburne 
+38.8 - 118.0 km/hr,  
+-0.28 - 0.13 g 
+2.6 mins,  
+3.95 km  
+1570  S-Vta10 
+V-Vta11 Round About (x2), A – Road (A50), 
+Tyre Pressure A 
+Oaks Green 
+Ashburne 
+26.8 - 97.7 km/hr,  
+-0.45 - 0.15 g 
+1.0 min,   
+0.92 km  
+589  S-Vta11 
+V-Vta12 Change in Speed, A-Road (A515), Tyre 
+Pressure A 
+Ashburne 44.7 - 85.3 km/hr,  
+-0.44 - 0.13 g 
+1.1 mins,  
+1.27 km  
+690  S-Vta12 
+V-Vta13 A-Road (A515), Country Road, Hard-
+Brake, Tyre Pressure A 
+Ashburne 72.7 - 103.6 km/hr,  
+-0.38 - 0.12 g 
+0.8 mins,  
+1.14 km  
+473  S-Vta13 
+V-Vta14 Hard-Brake, Change in Speed, A – Road 
+(A515), Tyre Pressure A 
+Ashburne 52.8 - 91.0 km/hr,  
+-0.32 - 0.13 g 
+4.8 mins,  
+5.45 km  
+2893  S-Vta14 
+V-Vta15 A – Road (A515), Tyre Pressure A Ashburne 60.1 - 78.8 km/hr,  
+,-0.12 - 0.06 g 
+1.4 mins,  
+1.72 km  
+869  S-Vta15 
+V-Vta16 Round-About (x3), Hilly Road, Country 
+Road, A-Road (A515), Tyre Pressure A 
+Thorpe 
+Ashburne, 
+Clifton  
+0.0 - 93.9 km/hr,  
+-0.49 - 0.42 g 
+18.9 mins,  
+13.72 km  
+11361  S-Vta16 
+V-Vta17 Hilly Road, Hard-Brake, Stationary (No 
+Motion), Tyre Pressure A 
+Ilam, Blore 0.0 - 56.2 km/hr,  
+-0.51 - 0.28 g 
+7.7 mins,  
+4.19 km 
+4594  S-Vta17 
+Table A2-1 Dataset description from Driver E 
+
+=== PAGE 10 ===
+10 
+ 
+Driv er Dataset 
+name  
+Features  Cities and 
+T owns 
+covered  
+Weather 
+Conditions  
+Collection 
+Date  
+Velocity and 
+acceleration range 
+ 
+T otal time driven  and 
+distance covered  
+T otal number 
+of data points 
+Corresponding 
+Smartphone 
+Dataset  
+E V-Vta19 Hilly Road, Tyre Pressure A ilam 4-10 / 3-6 °C 
+Passing clouds, 
+Broken Clouds, 
+Scattered Clouds. 
+Humidity:75 -93% 
+SE 
+Wind:4.971 mph 
+06/112019 
+  
+0.0 - 55.2 km/hr,  
+-0.35 - 0.22 g 
+0.5 min,  
+0.26 km  
+310  S-Vta19 
+V-Vta20 Hilly Road, Approximate Straight-line 
+travel , Tyre Pressure A 
+ilam 0.0 - 44.8 km/hr,  
+-0.19 - 0.3 g 
+5.4 mins,  
+0.39 km  
+3223  S-Vta20 
+V-Vta21 Hilly Road, Tyre Pressure A Ilam 0.0 - 74.8 km/hr,  
+-0.44 - 0.24 g 
+3.5 mins,  
+2.76 km  
+2088  S-Vta21 
+V-Vta22 Hilly Road, Hard Brake,, Tyre Pressure 
+A 
+ilam 14.8 - 55.8 km/hr,  
+-0.53 - 0.16 g 
+2.6 mins,  
+1.67 km  
+1572  S-Vta22 
+V-Vta23 Hilly Road, Hard Brake,, Tyre Pressure 
+A 
+Thorpe  0.0 - 51.9 km/hr,  
+-0.57 - 0.42 g 
+1.9 mins,   
+1.1 km  
+1119  S-Vta23 
+V-Vta24 Hilly Road, Tyre Pressure A Thorpe  0.0 - 56.4 km/hr,  
+-0.46 - 0.36 g 
+2.0 mins,  
+0.71 km  
+1184  S-Vta24 
+V-Vta25 U-turn, Tyre Pressure A Thorpe  0.0 - 48.6 km/hr,  
+-0.46 - 0.3 g 
+1.1 mins,  
+0.16 km  
+646  S-Vta25 
+V-Vta26 Gravel Road, Dirt Road, Hilly Road, 
+Tyre Pressure A 
+Thorpe  0.0 - 55.1 km/hr,  
+-0.27 - 0.44 g 
+3.2 mins,  
+1.02 km  
+1947  S-Vta26 
+V-Vta27 Gravel Road, Several Hilly Road, 
+Potholes, Country Road, A-Road 
+(A515), Tyre Pressure A 
+Ashburne 0.0 - 65.0 km/hr,  
+-0.43 - 0.29 g 
+4.8 mins,  
+3.16 km  
+2853  S-Vta27 
+V-Vta28 Country Road, Hard Brake, Valley, A-
+Road (A515) 
+Milldale  0.0 - 66.0 km/hr,  
+-0.58 - 0.31 g 
+7.0 mins,  
+3.94 km  
+4219  S-Vta28 
+V-Vta29 Hard Brake, Country Road, Hilly Road, 
+Windy Road, Dirt Road, Wet Road, 
+Reverse (x2), Bumps, Rain, B-Road 
+(B5053), Country Road, U-Turn (x3), 
+Windy Road, Valley, Tyre Pressure A 
+Wetton,  
+Milldale 
+0.0 - 102.0 km/hr,  
+-0.8 - 0.38 g 
+39.6 mins,  
+26.12 km  
+23737  S-Vta29 
+V-Vta30 Rain, Wet Road, U-Turn (x2), A-Road 
+(A53, A515), Inner Town Driving, B-
+Road (B5053) , Tyre Pressure A 
+Buxton  0.0 - 100.0 km/hr,  
+-0.47 - 0.36 g 
+28.6 mins,  
+11.77 km  
+17179  S-Vta30 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+Table A2-2 Dataset description from Driver E 
+ 
+
+=== PAGE 11 ===
+11 
+ 
+Table A3 Dataset description from Driver E 
+Driv er Dataset 
+name  
+Features  Cities and 
+T owns 
+covered  
+Weather Conditions Collection 
+Date  
+Velocity and 
+acceleration range 
+ 
+T otal time driv en and 
+distance  covered  
+T otal 
+number of 
+data points  
+Corresponding 
+Smartphone 
+Dataset  
+E V-Vtb1 Valley, rain, Wet-Road, Country 
+Road, U-Turn (x2), Hard-Brake, 
+Swift-Maneuver , A – Road (A6, 
+A6020, A623, A515), B-Road 
+(B6405), Round About (x3), day 
+Time, Tyre Pressure A 
+Bakewell, 
+Tideswell, 
+Ashford on 
+water, 
+Buxton  
+ 
+4-8 / 4 °C 
+Rain, Passing clouds, 
+Broken Clouds, Chilly. 
+Humidity:94 -98% 
+Barometer:1004 mbar 
+N 
+Wind:10.564 mph 
+ 
+06/11/2019 0.0 - 101.2 km/hr,  
+-63 - 0.36 g 
+54.1 mins ,  
+41.94 km  
+32459  S-Vtb1 
+V-Vtb2 Country Roa d, Wet Road, Dirt 
+Road, Tyre Pressure A 
+Youlgreave 0.0 - 61.1 km/hr,  
+-0.36 - 0.39 g 
+9.5 mins,  
+4.35 km  
+5712  S-Vtb2 
+V-Vtb3 Reverse, Wet Road, Dirt Road, 
+Gravel Road, Night-time, Tyre 
+Pressure A 
+Youlgreave 0.0 - 37.5 km/hr,  
+-0.23 - 0.33 g 
+13.8 mins ,  
+0.71 km  
+8289  S-Vtb3 
+V-Vtb4 Dirt Road, Country Road, Gravel, 
+Wet Road, Tyre Pressure A 
+Youlgreave 0.0 - 32.7 km/hr,  
+-0.31 - 0.27 g 
+1.0 min ,  
+0.27 km  
+625  S-Vtb4 
+V-Vtb5 Dirt Road, Country Road, Gravel 
+Road, Hard Brake, 
+Wet Road, B Road (B6405, 
+B6012, B5056), Inner Town 
+Driving, A-Road, Motorway 
+(M42, M1), Rush hour(Traffic) 
+Round-About (x6), A-Road (A5, 
+A42, A38, A615,A6), Tyre 
+Pressure A  
+Atherstone, 
+Nuthall, 
+Hilcote,  
+Matlock,  
+Rowsley, 
+Youlgreave 
+0.0 - 112.9 km/hr,  
+-0.55 - 0.42 g 
+107.7 mins,  
+111.6 6 km 
+64610  S-Vtb5 
+V-Vtb6 A-Road (A5), Tyre Pressure A Atherstone  52.7 - 73.0 km/hr,  
+-0.11 - 0.11 g 
+0.8 min ,  
+0.89 km  
+508  S-Vtb6 
+V-Vtb7 Approximate Straight-line Motion, 
+Night-time, A-Road (A5), Tyre 
+Pressure A 
+Atherstone  29.1 - 69.2 km/hr,  
+-0.37 - 0.13 g 
+0.8 min ,  
+0.72 km  
+461  S-Vtb7 
+V-Vtb8 Approximate Straight-line Motion, 
+Night-time, Wet Road, A-Road 
+(A5), Tyre Pressure A 
+Atherstone  60.9 - 76.5 km/hr,  
+-0.35 - 0.08 g 
+1.2 mins,  
+1.35 km  
+699  S-Vtb8 
+V-Vtb9 Approximate Straight-line Motion, 
+Night -time, Wet Road,Hard Brake, 
+A-Road (A5) , Tyre Pressure A 
+Nuneaton 66.8 - 92.0 km/hr,  
+-0.14 - 0.1 g 
+0.8 min ,  
+0.98 km  
+457  S-Vtb9 
+V-Vtb10 Round-About, Wet Road, Night-
+time, A-Road (A5), Tyre Pressure 
+A 
+Nuneaton 26.1 - 58.5 km/hr,  
+-0.24 - 0.12 g 
+0.3 min,  
+0.23 km  
+195  S-Vtb10 
+V-Vtb11 Approximate Straight-line Motion, 
+Night-time, Wet Road, A-Road 
+(A5), Tyre Pressure A 
+Nuneaton 65.1 - 75.3 km/hr,  
+-0.05 - 0.12 g 
+0.7 min ,  
+0.84 km  
+433  S-Vtb11 
+V-Vtb12 Round-About (x1), Wet Road, 
+Night-time, Tyre Pressure A 
+Nuneaton 22.2 - 71.6 km/hr,  
+-0.38 - 0.17 g 
+0.8 min ,  
+0.61 km  
+490  S-Vtb12 
+V-Vtb13 Parking, Wet Road, Tyre Pressure 
+A 
+Nuneaton 7.5 - 43.3 km/hr,  
+-0.31 - 0.22 g 
+2.1 mins,  
+0.99 km  
+1245  N/A 
+ 
+
+=== PAGE 12 ===
+12 
+ 
+Table A4 Dataset description from Driver E 
+Driver  Dataset 
+name  
+Features  Cities and 
+T owns covered 
+Weather 
+Conditions  
+Collection 
+Date  
+Velocity and 
+acceleration range 
+ 
+T otal time driven 
+and distance 
+covered  
+T otal 
+number of 
+data points 
+Corresponding 
+Smartphone 
+Dataset  
+E V-Vw1 Stationary (No Motion, 
+sensor bias estimation), Daytime, 
+Tyre Pressure C 
+Nuneaton 10 °C 
+Smoke. 
+Wind: 6 mph N 
+Humidity: 86% 
+08/01/2020  
+ 
+ 
+ 
+0.00 - 0.00 km/hr,  
+0.00 - -0.00 g 
+34.1 mins ,  
+0.00 km 
+20475  S-Vw1 
+V-Vw2 A- road (A5, A421), Motorway (M5), 
+Daytime, Round About (x22), U-Turn 
+(x2), Inner city driving, Tyre pressure 
+C 
+Nuneaton,  
+Hinckley  
+Milton Keynes  
+0.0 - 115.4 km/hr,  
+-0.62 - 0.45 g 
+87.9 mins ,  
+98.63 km  
+52712  S-Vw2 
+V-Vw3 Round-About (x6), Daytime, B- Road, 
+Inner city driving, Tyre pressure C 
+Milton Keynes  0.0 - 77.4 km/hr,  
+-0.47 - 0.41 g 
+6.6 mins,  
+5.05 km  
+3942  S-Vw3 
+V-Vw4 Round-About (x77), Swift-Maneuvers, 
+Hard-Brake, Inner City Driving, 
+Reverse, A-Road, Motorway (M5, 
+M40, M42), Country Road, Successive 
+Left -Right Turns, Daytime, U-Turn 
+(x3), Tyre Pressure D 
+Milton Keynes, 
+Buckingham, 
+Droitwich Spa, 
+Kidderminster, 
+Worcester  
+0.0 - 131.9 km/hr,  
+-0.66 - 0.45 g 
+211.0 mins, 
+214.62 km  
+126573  S-Vw4 
+V-Vw5 Successive Left-Right Turns, Daytime, 
+Sharp Turn Left/Right, Tyre Pressure 
+D 
+Worcester  10 °C 
+Passing clouds. 
+Wind: 2 mph N 
+Humidity: 88%
+  
+0.0 - 38.7 km/hr,  
+-0.4 - 0.21 g 
+1.8 mins,  
+0.7 km  
+1050  
+ 
+S-Vw5 
+V-Vw6 Bumps, Swift-Maneuvers, Daytime, 
+Sharp Turn Left/Right, Pressure F 
+Worcester  3.3 - 40.7 km/hr,  
+-0.34 - 0.26 g 
+2.1 mins,  
+1.08 km  
+1288  S-Vw6 
+V-Vw7 Successive Left-Right Turns, Daytime, 
+Sharp Turn Left/Right, Tyre Pressure 
+D 
+Worcester  0.4 - 42.2 km/hr,  
+-0.37 - 0.37 g 
+2.8 mins,  
+1.23 km  
+1689  S-Vw7 
+V-Vw8 Successive Left-Right Turns, Daytime, 
+Sharp Turn Left/Right, Tyre Pressure 
+D 
+Worcester  0.0 - 46.4 km/hr,  
+-0.37  - 0.27 g 
+2.7 mins,  
+1.12 km  
+1599  S-Vw8 
+V-Vw9 Zig-Zag Motion, Daytime, Hard 
+Brake, Tyre Pressure D 
+Worcester  3.8 - 42.0 km/hr,  
+-0.67 - 0.21 g 
+1.0 min ,  
+0.45 km  
+601  S-Vw9 
+V-Vw10 Hilly Road, Daytime, Pressure F Worcester  11.8 - 58.9 km/hr,  
+-0.42 - 0.11 g 
+1.1 mins,  
+0.74 km  
+ 
+670  
+S-Vw10 
+V-Vw11 Motorway (M5), Daytime, Round 
+About (x5), Tyre Pressure D 
+ 0.0 - 98.4 km/hr,  
+-0.37 - 0.33 g 
+8.2 mins,  
+5.85 km  
+4924  S-Vw11 
+V-Vw12 Approximate Straight-line Motion, 
+Daytime, Motorway (M5), Tyre 
+Pressure D 
+ 7 °C 
+Drizzle. Fog. 
+Wind: 5 mph N 
+Humidity: 93% 
+ 
+82.6 - 97.4 km/hr,  
+-0.06 - 0.07 g 
+1.75 mins ,  
+2.64 km 
+1050  
+ 
+S-Vw12 
+
+=== PAGE 13 ===
+13 
+ 
+Driver  Dataset 
+name  
+Features  Cities and 
+T owns covered 
+Weather 
+Conditions  
+Collection 
+Date  
+Velocity and 
+acceleration range 
+ 
+T otal time driven  
+and distance 
+covered  
+T otal 
+number of 
+data points 
+Corresponding 
+Smartphone 
+Dataset  
+E 
+ 
+V-Vw13 Approximate Straight-line Motion, 
+Daytime, Motorway (M5), Tyre 
+Pressure D 
+ 7 °C 
+Drizzle. Fog. 
+Wind: 5 mph N 
+Humidity: 93% 
+ 
+08/01/2020  
+ 
+ 
+ 
+94.0 - 115.0 km/hr,  
+-0.07 - 0.06 g 
+0.5 min,  
+0.82 km  
+297  
+ 
+S-Vw13 
+V -Vw14a  Motorway (M5), Nighttime, Tyre 
+Pressure D 
+ 61.9 - 109.4 km/hr,  
+-0.38 - 0.12 g 
+5.2 mins,  
+7.92 km  
+3140  S-Vw14a  
+V -Vw14b  Motorway (M42), Nighttime, Tyre 
+Pressure D 
+ 12.6 - 120.1 km/hr,  
+-0.28  - 0.28 g 
+32.7 mins,  
+41.21 km  
+19600  S-Vw14b  
+V -Vw14c  Motorway (M42), Round About (x2), 
+A-Road (A446), Nighttime, Hard 
+Brake, Tyre Pressure D 
+ 0.0 - 100.5 km/hr,  
+-0.53 - 0.41 g 
+26.4 mins,  
+17.15 km  
+15857  S-Vw14c  
+V -Vw15 Stationary (No Motion, sensor bias 
+estimation), Nighttime, Tyre Pressure 
+D 
+Dordon  8 °C  
+Cool.  
+Wind: 2 mph N 
+Humidity: 80%
+  
+0.0 - 0.0 km/hr,  
+0.00 - 0.0 g 
+2.3 mins,  
+0.00 km 
+1391  S-Vw15 
+V -Vw16a A – Road (A5), Round About (x2), 
+Tyre Pressure D 
+Atherstone  8 °C  
+Rain showers. 
+Overcast. 
+2 mph N 
+80%  
+ 
+ 
+0.0 - 83.5 km/hr,  
+-0.39 - 0.4 g 
+10.0 mins,  
+8.49 km  
+6000  S-Vw16a 
+V -Vw16b Hard-Brake, Nighttime, A – Road 
+(A5), Approximate Straight-line travel, 
+Tyre Pressure D 
+Nuneaton 1.3 - 86.3 km/hr,  
+-0.75 - 0.29 g 
+2.0 mins,  
+1.99 km  
+1171  S-Vw16b 
+V -Vw17 Hard-Brake, Nighttime, A – Road 
+(A5), Approximate Straight-line travel, 
+Tyre Pressure D 
+Calcedote 31.5 - 72.7 km/hr,  
+-0.8 - 0.19 g 
+0.5 min,  
+0.54 km  
+329  S-Vw17 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+Table A5 Dataset description from Driver E 
+ 
+
+=== PAGE 14 ===
+14 
+ 
+Table A6-1 Dataset description from Driver E 
+Driver Dataset 
+name 
+Features Cities and 
+Towns 
+covered  
+Weather 
+Conditions 
+Collection 
+Date 
+Velocity and 
+acceleration range 
+ 
+T otal time 
+driven  and 
+distance 
+covered  
+T otal number 
+of data points 
+Corresponding 
+Smartphone 
+Dataset  
+E V-Vfa01 A-Road (A444), Round About (x1) , B 
+–Road (B4116) Day Time, Hard 
+Brake, Tyre Pressure A 
+ 
+Nuneaton,  
+Twycross,  
+Measham  
+6 °C Quite coo l. 
+Wind: 8 mph N 
+Humidity:  97% 
+7 °C, Scattered 
+clouds.   
+Wind: 8 mph N 
+Humidity:  87% 
+5 °C, Light rain. 
+Passing clouds. 
+Wind: 10 mph N 
+Humidity:87% 
+08/11/2019 0.0 - 98.4 km/hr,  
+-0.56 - 0.42 g 
+19.2 mins,  
+18.8 km  
+11535   
+ 
+S-Vfa01 
+V-Vfa02 B-Road (B4116), Round About (x5), 
+A Road (A42, A641), Motorway 
+(M1, M62) High Rise Buildings, Hard 
+Brake, Tyre Pressure C 
+Bradford,  
+Measham  
+0.0 - 117.9 km/hr,  
+-0.67 - 0.48 g 
+112.9  mins, 
+163.38 km  
+67755   S-Vfa02 
+V-Vfb01a City Centre Driving, Round-About 
+(x1), Wet Road, Ring Road, Night, 
+Tyre Pressure C 
+Bradford  0.0 - 68.9 km/hr,  
+-0.43 - 0.42 g 
+28.3 mins,  
+6.81 km  
+17000  N/A 
+V-Vfb01b Motorway (M606), Round-About 
+(x1), City Road s Traffic, Wet Road, 
+Changes in Acceleration in Short 
+Periods of Time, Night, Tyre 
+Pressure C  
+ 0.0 - 83.0 km/hr ,  
+-0.38 - 0.23 g 
+6.5 mins ,  
+4.07 km  
+3880  N/A 
+V-Vfb01c Motorway (M62), Wet Road, Heavy 
+Traffic, Night, Tyre Pressure C 
+ 0.2 - 104.5 km/hr,  
+-0.36 - 0.38 g 
+10.5 mins , 
+10.66 km  
+6320  N/A 
+V-Vfb01d Round-About (x1), A-Road (A650),   0.0 - 56.0 km/hr ,  
+-0.46 - 0.36 g 
+17.9 mins,  
+3.39 km  
+10713  N/A 
+ 
+V-Vfb02a Motorway (M1), Round About (x2), 
+A-Road (A650), Night, Hard Brake, 
+Tyre Pressure D 
+East  
+Ardsley,  
+7 °C, Rain showers. 
+Overcast.   
+Wind:  12 mph N 
+Humidity: 86% 
+0.0 - 122.3 km/hr,  
+-0.5 - 0.37 g 
+59.9 mins,  
+96.5 km  
+35960  N/A 
+V-Vfb02b Round About (x1), Bumps, 
+Successive Left Right Turns, Hard-
+Brake (x7), Zig-zag (x6),Night, Tyre  
+Pressure D  
+Nuthall  0.0 - 84.3 km/hr ,  
+-0.5 - 0.35 g 
+18.3 mins,  
+7.69 km  
+11000  N/A 
+V-Vfb02c U-Turn (x1), Hard Brake, Night, 
+Tyre Pressure D 
+Nuthall  2.0 - 52.8 km/hr ,  
+-0.53 - 0.26 g 
+1.1 mins,  
+0.54 km  
+640  N/A 
+ 
+ 
+ 
+ 
+ 
+
+=== PAGE 15 ===
+15 
+ 
+Driver Dataset 
+name 
+Features Cities and 
+Towns 
+covered 
+Weather 
+Conditions 
+Collection 
+Date 
+Velocity and 
+acceleration range 
+ 
+T otal time 
+driven  and 
+distance 
+covered  
+T otal number 
+of data points 
+Corresponding 
+Smartphone 
+Dataset  
+E V-Vfb02d Round About (x1), Night, Tyre 
+Pressure D  
+Nuthall  7 °C, Rain showers. 
+Overcast.   
+Wind:  12 mph N 
+Humidity: 86% 
+08/11/2019 0.0 - 57.3 km/hr,  
+-0.33 - 0.31 g 
+1.5 mins,  
+0.84 km  
+880  N/A 
+V-Vfb02e Changes in acceleration in short 
+period of time, Night, Tyre Pressure 
+D 
+Nuthall  37.4 - 73.9 km/hr,  
+-0.24 - 0.19 g 
+1.6 mins,  
+1.52  km 
+980  N/A 
+V-Vfb02f Round About (x1), Night, Tyre 
+Pressure D  
+Nuthall  1.6 - 49.5 km/hr,  
+-0.24 - 0.32 g 
+1.1 mins,  
+0.47 km  
+660  N/A 
+V-Vfb02g Motorway (M1), A-Road (A42, 
+A444, A5), Country Road, Round 
+About (x2), Hard Brake, Night, Tyre 
+Pressure D  
+Nuneaton 0.0 - 119.4 km/hr,  
+-0.51 - 0.35 g 
+45.3 mins, 
+63.56 km  
+27159  N/A 
+ 
+Table A7 Information on other Smartphone Dataset captured independently from drivers F, G and H 
+Driver  Dataset name Location  Comments Vehicle  
+Model  
+Phone Model T otal T ime 
+driven (mi ns) 
+T otal distance 
+covered (km) 
+T otal number 
+of data points 
+F S-T1, S-T2, S-T3, S-T4, S-T5, 
+S-T6 , S-T8, S-T9 
+France 
+ 
+Information on 3-axis 
+orientation and magnetic 
+field not available. 
+Renault Megane Motorola moto 
+G7 power 
+1005.70  1508.39  603425  
+S-T10,  S-T11 France - Renault Megane Motorola moto 
+G7 power 
+20.60  8.86  12389  
+G S-I Nigeria - Toyota Corolla 
+Verso 
+Huawei P20 
+pro,  
+9.70 0.06  5800  
+H S-A1, S-A2, S-A3, S-A4, S-
+A5, S-A6, S-A7, S-A8, S-A9, 
+S-A10, S-A11, S-A12, S-A13 
+England - Volvo XC70 Blackberry Priv 638.3 0 1511.93  382956  
+ 
+ 
+Table A6-2 Dataset description from Driver E 
+ 
+

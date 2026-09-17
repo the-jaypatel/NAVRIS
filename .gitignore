@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+*.class
+*.so
+.env
+.venv
+venv/
+
+# Data and large raw datasets
+data/raw/IO-VNBD/
+*.csv
+!data/manifest/*.csv
+*.zip
+*.tar.gz
+
+# IDE & OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
