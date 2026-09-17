@@ -1,0 +1,16 @@
+recording_id,driver,vehicle,phone,split,is_synchronized,status,sync_parquet_path,windows_npz_path,num_samples,num_windows,duration_s,num_gps_fixes
+A1,Driver H,Volvo XC70,Blackberry Priv,train,False,SUCCESS,data/processed\normalized\A1_phone.parquet,data/processed\windows\A1_windows.npz,5942,593,2970.605,24
+A10,Driver H,Volvo XC70,Blackberry Priv,train,False,SUCCESS,data/processed\normalized\A10_phone.parquet,data/processed\windows\A10_windows.npz,8886,887,4442.5,3955
+A11,Driver H,Volvo XC70,Blackberry Priv,train,False,SUCCESS,data/processed\normalized\A11_phone.parquet,data/processed\windows\A11_windows.npz,5155,514,2577.0,181
+A12,Driver H,Volvo XC70,Blackberry Priv,test,False,SUCCESS,data/processed\normalized\A12_phone.parquet,data/processed\windows\A12_windows.npz,4673,466,2335.999,156
+A13,Driver H,Volvo XC70,Blackberry Priv,val,False,SUCCESS,data/processed\normalized\A13_phone.parquet,data/processed\windows\A13_windows.npz,9184,917,4591.5,274
+A2,Driver H,Volvo XC70,Blackberry Priv,train,False,SUCCESS,data/processed\normalized\A2_phone.parquet,data/processed\windows\A2_windows.npz,11630,1162,5814.5,38
+A3,Driver H,Volvo XC70,Blackberry Priv,test,False,SUCCESS,data/processed\normalized\A3_phone.parquet,data/processed\windows\A3_windows.npz,11132,1112,5566.028,37
+A4,Driver H,Volvo XC70,Blackberry Priv,val,False,SUCCESS,data/processed\normalized\A4_phone.parquet,data/processed\windows\A4_windows.npz,32829,3281,3282.8,3163
+A5,Driver H,Volvo XC70,Blackberry Priv,train,False,SUCCESS,data/processed\normalized\A5_phone.parquet,data/processed\windows\A5_windows.npz,85041,8503,8504.349,8149
+A6,Driver H,Volvo XC70,Blackberry Priv,train,False,SUCCESS,data/processed\normalized\A6_phone.parquet,data/processed\windows\A6_windows.npz,86034,8602,8537.402,7747
+A7,Driver H,Volvo XC70,Blackberry Priv,train,False,SUCCESS,data/processed\normalized\A7_phone.parquet,data/processed\windows\A7_windows.npz,43872,4386,4387.1,4322
+A8,Driver H,Volvo XC70,Blackberry Priv,train,False,SUCCESS,data/processed\normalized\A8_phone.parquet,data/processed\windows\A8_windows.npz,66617,6660,6661.6,6565
+A9,Driver H,Volvo XC70,Blackberry Priv,train,False,SUCCESS,data/processed\normalized\A9_phone.parquet,data/processed\windows\A9_windows.npz,11962,1195,5980.499,4891
+I,Driver G,Toyota Corolla Verso,Huawei P20 Pro,train,False,SUCCESS,data/processed\normalized\I_phone.parquet,data/processed\windows\I_windows.npz,5800,579,579.9,3
+M,Driver B,Ford Fiesta Titanium (FWD),Huawei P20 Pro,train,True,SUCCESS,data/processed\synchronized\M_sync.parquet,data/processed\windows\M_windows.npz,61718,6170,6171.7,1089

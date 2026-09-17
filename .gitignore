@@ -11,8 +11,11 @@ venv/
 data/raw/IO-VNBD/
 *.csv
 !data/manifest/*.csv
+!data/processed/*.csv
 *.zip
 *.tar.gz
+*.parquet
+*.npz
 
 # IDE & OS
 .vscode/
