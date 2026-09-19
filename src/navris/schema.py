@@ -1,4 +1,4 @@
-﻿"""
+"""
 NAVRIS Standardized Schema Definitions and Physical Constants.
 
 Every sensor measurement is converted strictly to standard SI units:
@@ -26,6 +26,7 @@ PSI_TO_BAR = 0.0689475729           # Pound per square inch to bar
 # Standardized Column Definitions for Smartphone Data
 PHONE_SCHEMA_COLUMNS = [
     'phone_time_s',              # Float: time since start of recording [s]
+    'phone_time_raw_ms',         # Float: Raw logger timestamp [ms]
     'phone_accel_x_mps2',        # Float: IMU acceleration body X [m/s^2]
     'phone_accel_y_mps2',        # Float: IMU acceleration body Y [m/s^2]
     'phone_accel_z_mps2',        # Float: IMU acceleration body Z [m/s^2]

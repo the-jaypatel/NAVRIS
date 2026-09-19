@@ -8,7 +8,7 @@ import os
 import re
 import numpy as np
 import pandas as pd
-from typing import Tuple, Optional, Dict, Any
+from typing import Tuple, Optional, Dict, Any, List
 
 from navris.schema import (
     KMH_TO_MPS, G_TO_MPS2, DEG_TO_RAD,
@@ -117,6 +117,76 @@ def load_raw_csv_robust(filepath: str) -> pd.DataFrame:
     return df
 
 
+def causal_unwrap_timestamps(
+    raw_time_ms: np.ndarray,
+    date_series: Optional[pd.Series] = None,
+    default_dt_ms: float = 100.0
+) -> Tuple[np.ndarray, List[Dict[str, Any]]]:
+    """
+    Causally unwraps smartphone timestamps subject to logger timer resets.
+    
+    Strictly causal: For each epoch i, only data at or before epoch i is used.
+    If a backward timer reset (diff < -1000 ms) is detected:
+    - If the wall-clock DATE column is available and valid, elapsed time between
+      date[i] and date[i-1] is used to bridge the reset causally.
+    - Otherwise, a causal default step (100 ms = 10 Hz) is applied.
+    - Strict forward monotonicity (diff > 0) is enforced.
+    
+    Returns:
+        (corrected_time_s, list_of_resets_detected)
+    """
+    n = len(raw_time_ms)
+    if n == 0:
+        return np.array([], dtype=float), []
+
+    # Parse date series causally if available
+    date_dt = None
+    if date_series is not None and len(date_series) > 0:
+        try:
+            # IO-VNBD format: '2019-09-08 12:03:51:741' -> replace last colon with period
+            s_clean = date_series.astype(str).str.replace(r':(\d{3})$', r'.\1', regex=True)
+            date_dt = pd.to_datetime(s_clean, format='%Y-%m-%d %H:%M:%S.%f', errors='coerce')
+        except Exception:
+            date_dt = None
+
+    corrected_ms = np.zeros(n, dtype=float)
+    t0_ms = raw_time_ms[0] if (not np.isnan(raw_time_ms[0])) else 0.0
+    cum_offset_ms = -t0_ms
+    resets_detected = []
+
+    corrected_ms[0] = 0.0
+    for i in range(1, n):
+        cur_raw = raw_time_ms[i]
+        prev_raw = raw_time_ms[i - 1]
+
+        diff = cur_raw - prev_raw
+        if diff < -1000.0:  # Timer reset detected (> 1 second backwards jump)
+            step_ms = default_dt_ms
+            if date_dt is not None and pd.notna(date_dt.iloc[i]) and pd.notna(date_dt.iloc[i - 1]):
+                date_diff_s = (date_dt.iloc[i] - date_dt.iloc[i - 1]).total_seconds()
+                if 0 < date_diff_s < 86400:  # Causally valid positive wall-clock delta
+                    step_ms = date_diff_s * 1000.0
+
+            cum_offset_ms = corrected_ms[i - 1] + step_ms - cur_raw
+            resets_detected.append({
+                'index': i,
+                'prev_raw_ms': prev_raw,
+                'cur_raw_ms': cur_raw,
+                'step_ms': step_ms,
+                'offset_ms': cum_offset_ms
+            })
+
+        cur_corr = cur_raw + cum_offset_ms
+        # Enforce strict forward progression
+        if cur_corr <= corrected_ms[i - 1]:
+            cur_corr = corrected_ms[i - 1] + 1.0  # +1 ms minimum step
+            cum_offset_ms = cur_corr - cur_raw
+
+        corrected_ms[i] = cur_corr
+
+    return corrected_ms / 1000.0, resets_detected
+
+
 def ingest_smartphone_data(
     filepath: str,
     origin_geodetic: Optional[Tuple[float, float, float]] = None
@@ -138,11 +208,15 @@ def ingest_smartphone_data(
 
     # 1. Time
     time_col = [c for c in df_raw.columns if 'time since start' in c.lower()]
+    date_col = [c for c in df_raw.columns if 'date' in c.lower()]
     if time_col:
-        raw_time_ms = pd.to_numeric(df_raw[time_col[0]], errors='coerce').values
-        t0 = raw_time_ms[0] if len(raw_time_ms) > 0 else 0.0
-        out['phone_time_s'] = (raw_time_ms - t0) / 1000.0
+        raw_time_ms = pd.to_numeric(df_raw[time_col[0]], errors='coerce').values.astype(float)
+        date_series = df_raw[date_col[0]] if date_col else None
+        corr_time_s, _ = causal_unwrap_timestamps(raw_time_ms, date_series=date_series)
+        out['phone_time_raw_ms'] = raw_time_ms
+        out['phone_time_s'] = corr_time_s
     else:
+        out['phone_time_raw_ms'] = np.arange(len(df_raw)) * 100.0
         out['phone_time_s'] = np.arange(len(df_raw)) * 0.1
 
     # 2. Accelerometer (m/s^2)
@@ -156,10 +230,9 @@ def ingest_smartphone_data(
         out[f'phone_gravity_{axis}_mps2'] = pd.to_numeric(df_raw[col[0]], errors='coerce') if col else np.nan
 
     # 4. Gyroscope (rad/s)
-    # Note: some files use X/Y/Z, others use Yaw/Pitch/Roll
-    gyro_x_col = [c for c in df_raw.columns if 'gyroscope' in c.lower() and (' x' in c.lower() or 'yaw' in c.lower())]
-    gyro_y_col = [c for c in df_raw.columns if 'gyroscope' in c.lower() and (' y' in c.lower() or 'pitch' in c.lower())]
-    gyro_z_col = [c for c in df_raw.columns if 'gyroscope' in c.lower() and (' z' in c.lower() or 'roll' in c.lower())]
+    gyro_x_col = [c for c in df_raw.columns if re.search(r'gyroscope\s+(x|yaw)\b', c, re.I)]
+    gyro_y_col = [c for c in df_raw.columns if re.search(r'gyroscope\s+(y|pitch)\b', c, re.I)]
+    gyro_z_col = [c for c in df_raw.columns if re.search(r'gyroscope\s+(z|roll)\b', c, re.I)]
 
     out['phone_gyro_x_radps'] = pd.to_numeric(df_raw[gyro_x_col[0]], errors='coerce') if gyro_x_col else np.nan
     out['phone_gyro_y_radps'] = pd.to_numeric(df_raw[gyro_y_col[0]], errors='coerce') if gyro_y_col else np.nan
