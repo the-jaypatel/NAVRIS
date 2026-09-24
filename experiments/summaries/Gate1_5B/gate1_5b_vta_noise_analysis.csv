@@ -1,0 +1,3 @@
+recording_id,driving_style,applied_lag_s,ref_straight_noise_std,phone_straight_noise_std,noise_ratio_phone_to_ref,corr_all_motion_r05,corr_sharp_turns_r10,corr_aggressive_turns_r20,confidence_classification
+VTA1A,Aggressive track test,0.6,0.00491,0.3299,67.2,0.3889,0.5285,0.752,MODERATE-CONFIDENCE (HIGH-VIBRATION TRACK REGIME)
+VTA2,Aggressive track test,0.8,0.00486,0.28989,59.7,0.4672,0.624,0.7564,MODERATE-CONFIDENCE (HIGH-VIBRATION TRACK REGIME)

@@ -1,4 +1,4 @@
-﻿"""
+"""
 NAVRIS Timeline Synchronization and Sensor Fusion Alignment.
 
 Synchronizes Vehicle Reference CAN/VBOX and Smartphone Data onto a common 10 Hz timebase:
@@ -19,10 +19,193 @@ from typing import Tuple, Optional, Dict, Any
 from navris.schema import SYNCHRONIZED_SCHEMA_COLUMNS
 
 
+def estimate_benchmark_lag(
+    df_ref: pd.DataFrame,
+    df_phone: pd.DataFrame,
+    min_speed_mps: float = 3.0,
+    min_yaw_rate_radps: float = 0.05,
+    max_lag_s: float = 25.0,
+    dt: float = 0.1,
+    n_segments: int = 3,
+    phone_yaw_channel: str = 'phone_gyro_y_radps'
+) -> Dict[str, Any]:
+    """
+    Estimates deterministic offline time lag between vehicle reference and smartphone data.
+    
+    Uses vehicle reference yaw rate (VBOX/CAN) and smartphone gyro yaw channel with
+    speed and yaw-rate excitation gating to find the constant offset tau maximizing Pearson correlation:
+        t_phone_aligned = t_phone + tau
+        
+    Args:
+        df_ref: Ingested vehicle reference DataFrame
+        df_phone: Ingested smartphone DataFrame
+        min_speed_mps: Speed excitation threshold in m/s (default 3.0)
+        min_yaw_rate_radps: Yaw-rate excitation threshold in rad/s (default 0.05)
+        max_lag_s: Maximum lag search range in seconds (+/- max_lag_s, default 25.0)
+        dt: Lag search resolution in seconds (default 0.1)
+        n_segments: Number of temporal segments for stability validation (default 3)
+        phone_yaw_channel: Smartphone column name representing yaw rate (default 'phone_gyro_y_radps')
+        
+    Returns:
+        Dictionary containing estimated_lag_s, zero_lag_corr, aligned_corr,
+        zero_lag_slope, aligned_slope, segment_lags, segment_spread_s,
+        is_valid, n_eval_samples, and status.
+    """
+    req_ref = ['ref_time_s', 'ref_speed_mps', 'ref_yaw_rate_radps']
+    req_phone = ['phone_time_s', phone_yaw_channel]
+    
+    if not all(c in df_ref.columns for c in req_ref) or not all(c in df_phone.columns for c in req_phone):
+        return {
+            'estimated_lag_s': 0.0,
+            'zero_lag_corr': float('nan'),
+            'aligned_corr': float('nan'),
+            'zero_lag_slope': float('nan'),
+            'aligned_slope': float('nan'),
+            'segment_lags': [],
+            'segment_spread_s': 0.0,
+            'is_valid': False,
+            'n_eval_samples': 0,
+            'status': 'FAILED: Missing required signal columns'
+        }
+
+    t_ref = df_ref['ref_time_s'].values
+    v_ref = df_ref['ref_speed_mps'].values
+    r_ref = df_ref['ref_yaw_rate_radps'].values
+    t_phone = df_phone['phone_time_s'].values
+    r_phone = df_phone[phone_yaw_channel].values
+
+    if len(t_ref) == 0 or len(t_phone) == 0:
+        return {
+            'estimated_lag_s': 0.0,
+            'zero_lag_corr': float('nan'),
+            'aligned_corr': float('nan'),
+            'zero_lag_slope': float('nan'),
+            'aligned_slope': float('nan'),
+            'segment_lags': [],
+            'segment_spread_s': 0.0,
+            'is_valid': False,
+            'n_eval_samples': 0,
+            'status': 'FAILED: Empty DataFrame'
+        }
+
+    lags = np.round(np.arange(-max_lag_s, max_lag_s + dt / 2, dt), 4)
+    corrs = []
+    
+    for tau in lags:
+        t_p = t_phone + tau
+        r_interp = np.interp(t_ref, t_p, r_phone)
+        mask = (
+            (t_ref >= t_p[0]) & (t_ref <= t_p[-1]) &
+            (v_ref > min_speed_mps) & (np.abs(r_ref) > min_yaw_rate_radps) &
+            (~np.isnan(r_ref)) & (~np.isnan(r_interp))
+        )
+        if np.sum(mask) >= 30 and np.std(r_interp[mask]) > 1e-5 and np.std(r_ref[mask]) > 1e-5:
+            c = float(np.corrcoef(r_interp[mask], r_ref[mask])[0, 1])
+        else:
+            c = -1.0
+        corrs.append(c)
+
+    best_idx = int(np.argmax(corrs))
+    max_c = float(corrs[best_idx])
+    
+    # Check if sufficient excitation was present
+    if max_c <= 0.0:
+        return {
+            'estimated_lag_s': 0.0,
+            'zero_lag_corr': float('nan'),
+            'aligned_corr': float('nan'),
+            'zero_lag_slope': float('nan'),
+            'aligned_slope': float('nan'),
+            'segment_lags': [],
+            'segment_spread_s': 0.0,
+            'is_valid': False,
+            'n_eval_samples': 0,
+            'status': 'FAILED: Insufficient excitation or no positive correlation'
+        }
+
+    best_lag = float(lags[best_idx])
+    
+    # Zero-lag correlation and slope
+    zero_idx = int(np.argmin(np.abs(lags)))
+    zero_corr = float(corrs[zero_idx])
+    
+    t_p_0 = t_phone
+    r_p_0 = np.interp(t_ref, t_p_0, r_phone)
+    mask_0 = (
+        (t_ref >= t_p_0[0]) & (t_ref <= t_p_0[-1]) &
+        (v_ref > min_speed_mps) & (np.abs(r_ref) > min_yaw_rate_radps) &
+        (~np.isnan(r_ref)) & (~np.isnan(r_p_0))
+    )
+    if np.sum(mask_0) >= 30 and np.std(r_ref[mask_0]) > 1e-5 and np.std(r_p_0[mask_0]) > 1e-5:
+        zero_slope = float(np.polyfit(r_ref[mask_0], r_p_0[mask_0], 1)[0])
+    else:
+        zero_slope = float('nan')
+
+    # Aligned slope and sample count
+    t_p_best = t_phone + best_lag
+    r_p_best = np.interp(t_ref, t_p_best, r_phone)
+    mask_best = (
+        (t_ref >= t_p_best[0]) & (t_ref <= t_p_best[-1]) &
+        (v_ref > min_speed_mps) & (np.abs(r_ref) > min_yaw_rate_radps) &
+        (~np.isnan(r_ref)) & (~np.isnan(r_p_best))
+    )
+    n_eval_samples = int(np.sum(mask_best))
+    if n_eval_samples >= 30 and np.std(r_ref[mask_best]) > 1e-5 and np.std(r_p_best[mask_best]) > 1e-5:
+        aligned_slope = float(np.polyfit(r_ref[mask_best], r_p_best[mask_best], 1)[0])
+    else:
+        aligned_slope = float('nan')
+
+    # Multi-segment stability validation
+    t_edges = np.linspace(t_ref[0], t_ref[-1], n_segments + 1)
+    seg_lags = []
+    for s in range(n_segments):
+        seg_mask = (
+            (t_ref >= t_edges[s]) & (t_ref < t_edges[s + 1]) &
+            (v_ref > min_speed_mps) & (np.abs(r_ref) > min_yaw_rate_radps) &
+            (~np.isnan(r_ref))
+        )
+        if np.sum(seg_mask) < 20:
+            seg_lags.append(float('nan'))
+            continue
+        seg_corrs = []
+        for tau in lags:
+            t_p = t_phone + tau
+            r_interp = np.interp(t_ref, t_p, r_phone)
+            o_mask = seg_mask & (t_ref >= t_p[0]) & (t_ref <= t_p[-1]) & (~np.isnan(r_interp))
+            if np.sum(o_mask) >= 20 and np.std(r_interp[o_mask]) > 1e-5 and np.std(r_ref[o_mask]) > 1e-5:
+                seg_corrs.append(float(np.corrcoef(r_interp[o_mask], r_ref[o_mask])[0, 1]))
+            else:
+                seg_corrs.append(-1.0)
+        seg_best_idx = int(np.argmax(seg_corrs))
+        if seg_corrs[seg_best_idx] > 0.0:
+            seg_lags.append(float(round(lags[seg_best_idx], 4)))
+        else:
+            seg_lags.append(float('nan'))
+
+    valid_segs = [x for x in seg_lags if not np.isnan(x)]
+    seg_spread = float(round(max(valid_segs) - min(valid_segs), 4)) if len(valid_segs) >= 2 else 0.0
+
+    return {
+        'estimated_lag_s': float(round(best_lag, 4)),
+        'zero_lag_corr': float(round(zero_corr, 4)),
+        'aligned_corr': float(round(max_c, 4)),
+        'zero_lag_slope': float(round(zero_slope, 4)) if not np.isnan(zero_slope) else float('nan'),
+        'aligned_slope': float(round(aligned_slope, 4)) if not np.isnan(aligned_slope) else float('nan'),
+        'segment_lags': seg_lags,
+        'segment_spread_s': seg_spread,
+        'is_valid': True,
+        'n_eval_samples': n_eval_samples,
+        'status': 'SUCCESS'
+    }
+
+
 def synchronize_recordings(
     df_ref: pd.DataFrame,
     df_phone: pd.DataFrame,
-    dt: float = 0.1
+    dt: float = 0.1,
+    phone_time_offset_s: float = 0.0,
+    auto_align_benchmark: bool = False,
+    benchmark_yaw_channel: str = 'phone_gyro_y_radps'
 ) -> pd.DataFrame:
     """
     Synchronizes a reference DataFrame and a smartphone DataFrame onto a common 10 Hz timeline.
@@ -31,19 +214,53 @@ def synchronize_recordings(
         df_ref: Normalized reference DataFrame from ingest_reference_data
         df_phone: Normalized smartphone DataFrame from ingest_smartphone_data
         dt: Target sampling interval in seconds (default 0.1 s = 10 Hz)
+        phone_time_offset_s: Constant offset added to phone timeline: t_phone_aligned = t_phone + offset
+        auto_align_benchmark: If True, automatically estimates benchmark lag via estimate_benchmark_lag
+        benchmark_yaw_channel: Phone channel used for auto lag estimation (default 'phone_gyro_y_radps')
         
     Returns:
-        Synchronized DataFrame adhering to SYNCHRONIZED_SCHEMA_COLUMNS.
+        Synchronized DataFrame adhering to SYNCHRONIZED_SCHEMA_COLUMNS, with sync metadata in df.attrs.
     """
+    sync_metadata: Dict[str, Any] = {}
+
+    if auto_align_benchmark:
+        lag_res = estimate_benchmark_lag(
+            df_ref=df_ref,
+            df_phone=df_phone,
+            dt=dt,
+            phone_yaw_channel=benchmark_yaw_channel
+        )
+        if lag_res['is_valid']:
+            phone_time_offset_s = lag_res['estimated_lag_s']
+            sync_metadata = {
+                'method': 'auto_benchmark_lag',
+                **lag_res
+            }
+        else:
+            phone_time_offset_s = 0.0
+            sync_metadata = {
+                'method': 'auto_benchmark_lag_failed',
+                **lag_res
+            }
+    else:
+        sync_metadata = {
+            'method': 'manual_offset' if phone_time_offset_s != 0.0 else 'zero_lag',
+            'estimated_lag_s': float(round(phone_time_offset_s, 4)),
+            'is_valid': True
+        }
+
     t_ref = df_ref['ref_time_s'].values
-    t_phone = df_phone['phone_time_s'].values
+    t_phone = df_phone['phone_time_s'].values + phone_time_offset_s
 
     # Determine overlapping time range
     t_start = max(float(t_ref[0]), float(t_phone[0]))
     t_end = min(float(t_ref[-1]), float(t_phone[-1]))
 
     if t_end <= t_start:
-        raise ValueError(f"No temporal overlap between reference [{t_ref[0]}, {t_ref[-1]}] and phone [{t_phone[0]}, {t_phone[-1]}]")
+        raise ValueError(
+            f"No temporal overlap between reference [{t_ref[0]}, {t_ref[-1]}] "
+            f"and aligned phone [{t_phone[0]}, {t_phone[-1]}]"
+        )
 
     # Construct regular 10 Hz timeline
     common_time = np.arange(t_start, t_end + 1e-6, dt)
@@ -158,5 +375,7 @@ def synchronize_recordings(
     out['phone_gps_obs_east_m'] = np.where(is_new_grid, out['phone_gps_east_m'], np.nan)
     out['phone_gps_obs_north_m'] = np.where(is_new_grid, out['phone_gps_north_m'], np.nan)
     out['phone_gps_obs_speed_mps'] = np.where(is_new_grid, out['phone_gps_speed_mps'], np.nan)
+
+    out.attrs['sync_metadata'] = sync_metadata
 
     return out

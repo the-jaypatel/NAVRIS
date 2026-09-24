@@ -1,0 +1,9 @@
+recording_id,driver,vehicle,applied_lag_s,pre_corr,pre_slope,post_corr,post_slope,seg1_lag_s,seg2_lag_s,seg3_lag_s,seg_spread_s,post_residual_lag_s,duration_s,num_samples,num_gps_fixes,mean_phone_gps_speed_mps,mean_ref_speed_mps,gps_speed_ratio,parquet_path
+S1,Driver A,Ford Fiesta Titanium (FWD),0.3,0.9695,0.9693,0.9828,0.9995,0.3,0.3,0.3,0.0,0.0,5174.2,51743,532,7.932142857142856,7.9524326441104565,0.9974486062472183,data/processed\synchronized\S1_sync.parquet
+S2,Driver A,Ford Fiesta Titanium (FWD),7.6,0.0136,0.0091,0.9624,0.9958,7.6,7.6,7.6,0.0,0.0,9379.9,93800,941,8.91451647183847,8.93418673987461,0.9977983146525974,data/processed\synchronized\S2_sync.parquet
+S3A,Driver A,Ford Fiesta Titanium (FWD),-6.7,0.2676,0.1996,0.9936,1.0091,-6.7,-6.7,-6.7,0.0,0.0,2455.3,24554,253,11.352766798418973,11.330018664910074,1.002007775466368,data/processed\synchronized\S3A_sync.parquet
+S4,Driver A,Ford Fiesta Titanium (FWD),1.8,0.6096,0.5655,0.9474,1.0,1.8,1.8,1.8,0.0,0.0,9458.1,94582,898,10.944298440979955,10.972189123979978,0.9974580566662793,data/processed\synchronized\S4_sync.parquet
+M,Driver B,Ford Fiesta Titanium (FWD),0.9,0.8898,0.8711,0.9896,1.0023,0.9,0.9,0.9,0.0,0.0,10596.4,105965,1091,10.692300641613198,10.69755626845916,0.9995087077165972,data/processed\synchronized\M_sync.parquet
+Y1,Driver D,Ford Fiesta Titanium (FWD),6.6,0.0586,0.0387,0.8237,0.9883,6.6,8.0,6.6,1.4,0.0,7391.3,73914,721,9.106027777777777,9.087170587193146,1.0020751443371392,data/processed\synchronized\Y1_sync.parquet
+VTA1A,Driver E,Ford Fiesta Titanium (FWD),0.6,0.3503,0.9119,0.3889,1.0363,0.5,0.6,0.6,0.1,0.0,2567.4,25675,2520,15.979015873015873,16.062524470899476,0.9948010290639622,data/processed\synchronized\VTA1A_sync.parquet
+VTA2,Driver E,Ford Fiesta Titanium (FWD),0.8,0.398,0.7891,0.4672,1.0105,0.9,0.7,0.7,0.2,0.0,1098.2,10983,1023,10.735786901270771,10.790284023026045,0.9949494265731116,data/processed\synchronized\VTA2_sync.parquet

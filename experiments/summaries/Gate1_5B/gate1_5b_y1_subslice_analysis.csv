@@ -1,0 +1,7 @@
+interval,start_s,end_s,eval_samples,best_lag_s,max_correlation,corr_at_6_6s,interpretation
+Seg 1 (0-2556s),0,2556,3782,6.6,0.9803,0.9803,Strict 6.60s physical convergence
+Seg 2A (2556-3196s),2556,3196,1507,8.2,0.6658,0.4079,Harmonic periodic ambiguity
+Seg 2B (3195-3835s),3195,3835,1913,6.6,0.9878,0.9878,Strict 6.60s physical convergence
+Seg 2C (3834-4474s),3834,4474,1897,6.6,0.9916,0.9916,Strict 6.60s physical convergence
+Seg 2D (4473-5113s),4473,5113,2977,6.6,0.9967,0.9967,Strict 6.60s physical convergence
+Seg 3 (5111-7667s),5111,7667,5480,6.6,0.9958,0.9958,Strict 6.60s physical convergence

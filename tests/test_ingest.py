@@ -1,4 +1,4 @@
-﻿import pytest
+import pytest
 import numpy as np
 import pandas as pd
 import sys
@@ -78,3 +78,20 @@ def test_driver_f_compatibility():
     # Accelerometer and Gyroscope must still be present and valid
     assert not df_f['phone_accel_x_mps2'].isna().all()
     assert not df_f['phone_gyro_x_radps'].isna().all()
+
+
+def test_phone_gps_speed_unscaled_mps():
+    """
+    Gate 1.5A Regression: Verifies that raw 'GPS SPEED (Kmh)' values are ingested
+    directly as m/s without applying an erroneous /3.6 conversion.
+    """
+    phone_path = 'data/raw/IO-VNBD/Synchronised V abd S datasets/Uncategorised IOVNB Dataset/S-Dataset/S-S1.csv'
+    if not os.path.exists(phone_path):
+        pytest.skip('Dataset not found locally')
+
+    df_phone, _ = ingest_smartphone_data(phone_path)
+    # At t = 156.0s (row ~1560), raw CSV value is 11.94, reference speed is ~12.03 m/s
+    # Ingested speed must be ~11.94 m/s (not 3.32 m/s!)
+    spd_156 = df_phone.loc[(df_phone['phone_time_s'] >= 155.9) & (df_phone['phone_time_s'] <= 156.1), 'phone_gps_speed_mps'].dropna().iloc[0]
+    assert np.isclose(spd_156, 11.94, atol=0.1)
+    assert spd_156 > 10.0  # Must not be compressed to ~3.3 m/s!

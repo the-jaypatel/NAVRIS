@@ -34,7 +34,9 @@ def process_single_recording(
     manifest_entry: Dict[str, Any],
     base_data_dir: str = 'data/raw/IO-VNBD',
     output_dir: str = 'data/processed',
-    window_config: Optional[WindowConfig] = None
+    window_config: Optional[WindowConfig] = None,
+    phone_time_offset_s: float = 0.0,
+    auto_align_benchmark: bool = False
 ) -> Dict[str, Any]:
     """
     Processes a single recording through the complete pipeline.
@@ -45,6 +47,8 @@ def process_single_recording(
         base_data_dir: Path to raw dataset root
         output_dir: Target output root directory
         window_config: Windowing parameters
+        phone_time_offset_s: Optional constant offset to add to phone timeline
+        auto_align_benchmark: If True, uses vehicle reference to estimate and align timeline lag
         
     Returns:
         Summary dict containing status, file paths, row counts, and window counts.
@@ -61,6 +65,12 @@ def process_single_recording(
 
     v_path = os.path.join(base_data_dir, str(v_rel)) if (v_rel is not None and pd.notna(v_rel)) else None
     s_path = os.path.join(base_data_dir, str(s_rel)) if (s_rel is not None and pd.notna(s_rel)) else None
+
+    # Route VTA1A to untrimmed raw VBOX source if present to eliminate author 14.4s truncation defect
+    if rec_id == 'VTA1A':
+        untrimmed_v = os.path.join(base_data_dir, 'Unsynchronised V and S Dataset/Uncategorised IOVNB (V and S) Dataset/V-Dataset/V-Vta1a.csv')
+        if os.path.exists(untrimmed_v):
+            v_path = untrimmed_v
 
     sync_dir = os.path.join(output_dir, 'synchronized')
     norm_dir = os.path.join(output_dir, 'normalized')
@@ -83,7 +93,9 @@ def process_single_recording(
         'num_samples': 0,
         'num_windows': 0,
         'duration_s': 0.0,
-        'num_gps_fixes': 0
+        'num_gps_fixes': 0,
+        'estimated_lag_s': 0.0,
+        'sync_metadata': {}
     }
 
     try:
@@ -92,12 +104,20 @@ def process_single_recording(
             df_ref, origin = ingest_reference_data(v_path)
             df_phone, _ = ingest_smartphone_data(s_path, origin_geodetic=origin)
 
-            df_sync = synchronize_recordings(df_ref, df_phone, dt=window_config.dt)
+            df_sync = synchronize_recordings(
+                df_ref,
+                df_phone,
+                dt=window_config.dt,
+                phone_time_offset_s=phone_time_offset_s,
+                auto_align_benchmark=auto_align_benchmark
+            )
 
             # Save synchronized Parquet
             out_parquet = os.path.join(sync_dir, f"{rec_id}_sync.parquet")
             df_sync.to_parquet(out_parquet, index=False, engine='pyarrow')
             result['sync_parquet_path'] = out_parquet
+            result['sync_metadata'] = df_sync.attrs.get('sync_metadata', {})
+            result['estimated_lag_s'] = df_sync.attrs.get('sync_metadata', {}).get('estimated_lag_s', 0.0)
 
             # Generate Causal Windows
             window_dict = generate_causal_windows(df_sync, manifest_entry, window_config)
@@ -147,7 +167,8 @@ def run_pipeline(
     manifest_path: str = 'data/manifest/recordings_manifest.csv',
     split_strategy: str = 'standard',
     limit: Optional[int] = None,
-    output_dir: str = 'data/processed'
+    output_dir: str = 'data/processed',
+    auto_align_benchmark: bool = False
 ) -> pd.DataFrame:
     """
     Executes NAVRIS preprocessing pipeline across dataset manifest.
@@ -186,7 +207,8 @@ def run_pipeline(
         res = process_single_recording(
             rec_id=rec_id,
             manifest_entry=entry,
-            output_dir=output_dir
+            output_dir=output_dir,
+            auto_align_benchmark=auto_align_benchmark
         )
         results.append(res)
 

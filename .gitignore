@@ -1,24 +1,43 @@
-# Python
+# Python Bytecode and Environments
 __pycache__/
 *.py[cod]
-*.class
+*$py.class
 *.so
-.env
-.venv
+.Python
+env/
 venv/
+.venv/
+ENV/
 
-# Data and large raw datasets
-data/raw/IO-VNBD/
-*.csv
-!data/manifest/*.csv
-!data/processed/*.csv
-*.zip
-*.tar.gz
-*.parquet
-*.npz
+# Testing and Type Checking Caches
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+.tox/
 
-# IDE & OS
-.vscode/
+# IDE and OS Files
 .idea/
+.vscode/
+*.swp
+*.swo
+*~
 .DS_Store
 Thumbs.db
+
+# Logs and Temporary Runtime Files
+*.log
+*.tmp
+claude_*/
+
+# Data and Bulk Artifacts (External / Generated)
+data/raw/
+data/processed/
+*.parquet
+*.npz
+*.zip
+*.tar.gz
+*.bin
+*.pkl
+*.joblib

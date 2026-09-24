@@ -277,9 +277,11 @@ def ingest_smartphone_data(
     out['phone_gps_lon_deg'] = lons
     out['phone_gps_alt_m'] = alts
 
-    # Speed: km/h -> m/s
+    # Speed: Raw column 'GPS SPEED (Kmh)' is empirically verified to be logged natively in m/s
+    # (Gate 1.5A & E3 forensic audits demonstrated raw/VBOX ratio is 0.997 +/- 0.005 across all 8 recordings).
+    # No /3.6 conversion is applied.
     if spd_col:
-        out['phone_gps_speed_mps'] = pd.to_numeric(df_raw[spd_col[0]], errors='coerce') * KMH_TO_MPS
+        out['phone_gps_speed_mps'] = pd.to_numeric(df_raw[spd_col[0]], errors='coerce')
     else:
         out['phone_gps_speed_mps'] = np.nan
 
