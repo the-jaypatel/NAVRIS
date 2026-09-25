@@ -97,14 +97,14 @@ NAVRIS GATE 2.3B-3 REAL-DATA NHC A/B BENCHMARK SUMMARY TABLE
 ========================================================================================================================
 Recording | A H-RMSE (m)   | B H-RMSE (m)   | Δ H-RMSE (%) | A Final (m)    | B Final (m)    | NHC Cand | NHC Acc | NHC Acc % | Classification
 ------------------------------------------------------------------------------------------------------------------------
-S1        | 6,178,807      | 11,580,768     | +87.43%      | 9,806,507      | 24,259,594     | 9,413    | 3,490   | 37.08%    | Mixed Evidence
-S2        | 26,126,179     | 42,389,911     | +62.25%      | 52,881,988     | 101,167,108    | 12,910   | 4,465   | 34.59%    | Mixed Evidence
-S3A       | 2,346,828      | 620,666        | -73.55%      | 4,536,215      | 1,723,880      | 7,579    | 4,039   | 53.29%    | Positive Evidence
-S4        | 20,132,521     | 37,351,982     | +85.53%      | 23,224,144     | 80,849,119     | 16,630   | 2,250   | 13.53%    | Negative Evidence
+S1        | 6,178,807      | 11,580,768     | +87.43%      | 9,806,507      | 24,259,594     | 9,413    | 3,490   | 37.08%    | Mixed evidence
+S2        | 26,126,179     | 42,389,911     | +62.25%      | 52,881,988     | 101,167,108    | 12,910   | 4,465   | 34.59%    | Mixed evidence
+S3A       | 2,346,828      | 620,666        | -73.55%      | 4,536,215      | 1,723,880      | 7,579    | 4,039   | 53.29%    | Improvement observed
+S4        | 20,132,521     | 37,351,982     | +85.53%      | 23,224,144     | 80,849,119     | 16,630   | 2,250   | 13.53%    | Degradation observed
 M         | N/A            | N/A            | N/A          | N/A            | N/A            | 0        | 0       | 0.00%     | Unobservable (Class F)
-Y1        | 3,661,814      | 29,884,134     | +716.10%     | 2,783,398      | 58,751,663     | 19,600   | 11,394  | 58.13%    | Negative Evidence
-VTA1A     | 2,260,452      | 1,480,088      | -34.52%      | 1,171,465      | 2,787,856      | 1,038    | 426     | 41.04%    | Mixed/Positive Evidence
-VTA2      | 46.23          | 31,080.62      | +67,133%     | 5.11           | 46,020.86      | 877      | 592     | 67.50%    | Negative Evidence
+Y1        | 3,661,814      | 29,884,134     | +716.10%     | 2,783,398      | 58,751,663     | 19,600   | 11,394  | 58.13%    | Degradation observed
+VTA1A     | 2,260,452      | 1,480,088      | -34.52%      | 1,171,465      | 2,787,856      | 1,038    | 426     | 41.04%    | Diagnostic evidence
+VTA2      | 46.23          | 31,080.62      | +67,133%     | 5.11           | 46,020.86      | 877      | 592     | 67.50%    | Degradation observed
 ========================================================================================================================
 ```
 
@@ -127,13 +127,13 @@ VTA2      | 46.23          | 31,080.62      | +67,133%     | 5.11           | 46
 
 ```text
 NHC Innovation Statistics Across Evaluated Routes:
-├── Recording S3A (Positive Case):
+├── Recording S3A (Improvement Observed Case):
 │   ├── Candidate Updates: 7,579 epochs (satisfying forward speed > 1.5 m/s, ||w|| <= 0.087, not stationary)
 │   ├── Accepted Updates: 4,039 epochs (53.29% acceptance rate)
 │   ├── Median NIS: 1.60 (Well within theoretical 2-DOF expectation E[chi^2] = 2.0)
 │   ├── 95th Percentile NIS: 1,239.7
 │   └── Effect: Dramatic bounding of runaway strapdown velocity during cruising segments.
-├── Recording VTA1A (Negative Control Case):
+├── Recording VTA1A (Diagnostic Evidence Case):
 │   ├── Candidate Updates: 1,038 epochs
 │   ├── Accepted Updates: 426 epochs (41.04% acceptance rate)
 │   ├── Median NIS: 21.59
@@ -147,7 +147,7 @@ NHC Innovation Statistics Across Evaluated Routes:
 
 ---
 
-## 8. VTA1A Negative-Control Analysis
+## 8. VTA1A Diagnostic Observation in Highway Cruising
 
 In Gate 2.3A, recording VTA1A served as a natural negative-control because the vehicle experiences zero post-departure stationary events. Classical ZUPT achieved zero operational benefit during motion on VTA1A.
 
@@ -160,11 +160,11 @@ In Gate 2.3B-3, VTA1A tested whether NHC successfully activated during sustained
   - Along-track RMSE decreased from **1,732,277 m to 1,163,352 m** (**-32.84% reduction**).
   - Cross-track RMSE decreased from **1,452,192 m to 915,026 m** (**-36.99% reduction**).
 
-**Finding:** On VTA1A, NHC demonstrated clear empirical evidence of continuous velocity and cross-track bounding during active cruise when ZUPT was completely inactive.
+**Finding:** On VTA1A, NHC demonstrated clear empirical evidence of continuous velocity and cross-track bounding during active cruise when ZUPT was completely inactive. This provides diagnostic evidence of in-motion constraint engagement under highway conditions, but should not be interpreted as independent proof of universal generalization.
 
 ---
 
-## 9. Failure-Mode Observations
+## 9. Observed Failure Modes and Hypotheses
 
 The empirical results reveal three distinct failure mechanisms:
 
@@ -176,19 +176,20 @@ Identified Failure Modes:
 │   │   The true smartphone mounting angle was rotated ~106° relative to the vehicle chassis.
 │   └── Consequence: The filter rotated forward vehicle velocity by 106° into the lateral axis,
 │       continually injecting massive false attitude corrections at 10 Hz.
-├── 2. Covariance Starvation & GNSS Gate Lockout (Recordings S1, S2, S4)
+├── 2. Covariance Starvation Hypothesis (Recordings S1, S2, S4)
 │   ├── Observation: On S1, short-term tracking improved (10s error -43%, 30s error -51%, velocity -6.3%),
 │   │   but long-term horizontal error degraded from 6.18M m to 11.58M m.
 │   ├── Mechanism: Applying 10 Hz updates without process noise floor collapsed covariance eigenvalues
 │   │   down to lambda_min(P) ~ 1e-10 to 1e-12.
-│   └── Consequence: The filter became hyper-confident, locking out valid subsequent GNSS fixes
-│       (S1 GNSS acceptance dropped from 7 to 4; S4 dropped from 13 to 5).
-└── 3. Turn Dynamics & Lever-Arm Perturbations (Recording VTA2)
+│   └── Consequence: The filter covariance shrank; this observed association is consistent with
+│       covariance over-confidence/starvation leading to subsequent GNSS gate rejections
+│       (S1 GNSS acceptance dropped from 7 to 4; S4 dropped from 13 to 5); further isolation is required to establish causality.
+└── 3. Turn Dynamics & Lever-Arm Perturbations Hypothesis (Recording VTA2)
     ├── Observation: On VTA2 (where baseline ESKF+ZUPT achieves 46.2m RMSE), NHC degraded to 31,081m.
     ├── Mechanism: VTA2 is a dense suburban route with rapid repeated 90° turns.
     │   Although the 5°/s turn inhibitor blocked updates during peak cornering, residual centripetal
-    │   lever-arm velocity (omega x r) during turn entry/exit corrupted velocity covariance.
-    └── Consequence: The tightened covariance rejected 486 GNSS fixes (acceptance fell from 96.7% to 48.7%).
+    │   lever-arm velocity (omega x r) during turn entry/exit is hypothesized to corrupt attitude and velocity covariance.
+    └── Consequence: The tightened covariance was associated with subsequent rejection of 486 GNSS fixes (acceptance fell from 96.7% to 48.7%).
 ```
 
 ---
@@ -220,9 +221,10 @@ Separating demonstrated evidence from hypotheses:
 
 * **Gate 2.3B-3 Real-Data Benchmark is COMPLETE.**
 * **Classification Summary:**
-  - **Positive Evidence:** S3A (-73.55% H-RMSE, -79.76% Vel RMSE).
-  - **Mixed Evidence:** VTA1A (-34.52% H-RMSE, -39.50% Vel RMSE), S1 (Velocity & short-term error improved; long-term starved), S2 (Velocity -29.9%; mounting degraded).
-  - **Negative Evidence:** Y1 (uncalibrated mounting angle), VTA2 (turn dynamics / GNSS lockout), S4 (covariance starvation).
+  - **Improvement Observed:** S3A (-73.55% H-RMSE, -79.76% Vel RMSE).
+  - **Diagnostic Evidence:** VTA1A (-34.52% H-RMSE, -39.50% Vel RMSE).
+  - **Mixed Evidence:** S1 (Velocity & short-term error improved; long-term degraded), S2 (Velocity -29.9%; heading unobservable).
+  - **Degradation Observed:** Y1 (uncalibrated mounting angle), VTA2 (turn dynamics / GNSS lockout), S4 (covariance starvation hypothesis).
   - **Unobservable:** M (Class F).
 
 Real-data evidence indicates that Non-Holonomic Constraints provide effective velocity conditioning during forward cruise, but their safe deployment requires:

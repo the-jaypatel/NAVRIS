@@ -29,8 +29,8 @@
 - [11 — Gate 2.3A: Controlled A/B Real-Data Benchmark & Empirical Audit](#11--gate-23a-controlled-ab-real-data-benchmark--empirical-audit)
 - [12 — Gate 2.3B: Non-Holonomic Constraints (NHC) Formulation & Synthetic Verification](#12--gate-23b-non-holonomic-constraints-nhc-formulation--synthetic-verification)
 - [13 — Gate 2.3B: Real-Data NHC A/B Benchmark Results](#13--gate-23b-real-data-nhc-ab-benchmark-results)
-- [14 — Empirical Evidence Classification (Positive, Mixed, Negative) Across Constraints](#14--empirical-evidence-classification-positive-mixed-negative-across-constraints)
-- [15 — Scientific Failure Analysis: The Fundamental Physical Limits of Kinematic Constraints](#15--scientific-failure-analysis-the-fundamental-physical-limits-of-kinematic-constraints)
+- [14 — Empirical Evidence Classification Across Constraints](#14--empirical-evidence-classification-across-constraints)
+- [15 — Scientific Failure Analysis: Observed Failure Modes and Hypotheses](#15--scientific-failure-analysis-observed-failure-modes-and-hypotheses)
 - [16 — What the Current Evidence Supports](#16--what-the-current-evidence-supports)
 - [17 — What the Current Evidence Does NOT Support](#17--what-the-current-evidence-does-not-support)
 - [18 — Interactive Web Cockpit & Telemetry Interface](#18--interactive-web-cockpit--telemetry-interface)
@@ -92,13 +92,13 @@ At the conclusion of **Phase 2 (Gate 2.3B Completed & Audited)**, the NAVRIS cla
   - Quantized ONNX/TFLite edge deployment on embedded ARM/Android runtimes.
 
 ### Major Empirical Findings Across Gates 2.2, 2.3A, and 2.3B
-1. **The VTA2 ZUPT Breakthrough:** In well-conditioned suburban driving with observable heading, causal ZUPT produced a **99.63% reduction in horizontal RMSE** ($12,544.15\text{ m} \to \mathbf{46.23\text{ m}}$) and reduced final position error from $70,540.65\text{ m}$ to **$5.11\text{ m}$**, preserving GNSS innovation consistency across 96.7% of fixes over an 18-minute drive.
-2. **The S3A NHC Breakthrough:** On a stop-and-go route with severe covariance starvation from an unexcited 327s standstill, adding causal NHC bounded the lateral and vertical velocity drift during cruising segments, reducing Horizontal RMSE by **-73.55%** ($2,346,828\text{ m} \to \mathbf{620,666\text{ m}}$), Velocity RMSE by **-79.76%** ($7,052\text{ m/s} \to \mathbf{1,428\text{ m/s}}$), and final position error by **-62.00%** ($4.54\text{M m} \to \mathbf{1.72\text{M m}}$).
-3. **The VTA1A Pure-Cruise Confirmation:** On an expressway route without intermediate stops (the negative control for ZUPT), NHC successfully engaged during steady cruising (426 accepted updates, 41.04% acceptance), reducing Horizontal RMSE by **-34.52%** ($2,260,452\text{ m} \to \mathbf{1,480,088\text{ m}}$) and Velocity RMSE by **-39.50%** ($6,927\text{ m/s} \to \mathbf{4,190\text{ m/s}}$).
-4. **The Three Fundamental Failure Modes of Kinematic Constraints:**
+1. **VTA2 Standstill Velocity Bounding Under ZUPT:** In well-conditioned suburban driving with observable heading, causal ZUPT produced a **99.63% reduction in horizontal RMSE** ($12,544.15\text{ m} \to \mathbf{46.23\text{ m}}$) and reduced final position error from $70,540.65\text{ m}$ to **$5.11\text{ m}$**, maintaining GNSS innovation consistency across 96.7% of fixes over an 18-minute drive.
+2. **S3A Improvement Observed Under NHC:** On a stop-and-go route with severe covariance shrinkage from an unexcited 327s standstill, adding causal NHC bounded the lateral and vertical velocity drift during cruising segments, resulting in an observed reduction in Horizontal RMSE of **-73.55%** ($2,346,828\text{ m} \to \mathbf{620,666\text{ m}}$), Velocity RMSE of **-79.76%** ($7,052\text{ m/s} \to \mathbf{1,428\text{ m/s}}$), and final position error of **-62.00%** ($4.54\text{M m} \to \mathbf{1.72\text{M m}}$).
+3. **VTA1A Diagnostic Evidence in Expressway Cruising:** VTA1A served as a negative-control route for the earlier Gate 2.3A ZUPT experiment because it contained no post-departure stationary intervals. In Gate 2.3B, NHC engaged during steady cruising (426 accepted updates, 41.04% acceptance), resulting in an observed reduction in Horizontal RMSE of **-34.52%** ($2,260,452\text{ m} \to \mathbf{1,480,088\text{ m}}$) and Velocity RMSE of **-39.50%** ($6,927\text{ m/s} \to \mathbf{4,190\text{ m/s}}$). This improvement provides diagnostic evidence that NHC actively constrains lateral/vertical drift during highway motion, but is not independent proof that NHC generalizes.
+4. **Observed Failure Modes and Hypotheses:**
    - **Mounting Yaw Error (Y1):** When sensor-to-vehicle mounting yaw has a large unobservable error ($\sim 106^\circ$), NHC enforces zero velocity along the vehicle lateral axis, which physically corresponds to the forward direction of motion. This injects spurious drag, degrading H-RMSE by **+716.10%** ($3.66\text{M m} \to 29.88\text{M m}$).
-   - **Covariance Starvation (S4 / S2):** Continuous un-damped constraint updates cause filter covariance $\mathbf{P}$ to collapse asymptotically ($10^{-12}$ minimum eigenvalue), making innovation gating hypersensitive and locking out future GNSS fixes.
-   - **Cornering Dynamics & Lever-Arm Perturbations (VTA2):** On VTA2, high turn-rate dynamics and unmodeled lever-arm centripetal accelerations caused lateral perturbations that degraded the pristine ZUPT baseline ($46.23\text{ m} \to 31,080.62\text{ m}$) by rejecting 486 GNSS updates.
+   - **Covariance Starvation Hypothesis (S4 / S2):** Continuous un-damped constraint updates reduce filter covariance eigenvalues ($10^{-12}$). This observed association is consistent with covariance over-confidence/starvation leading to subsequent GNSS gate rejections; further isolation is required to establish causality.
+   - **Cornering Dynamics & Lever-Arm Hypothesis (VTA2):** On VTA2, high turn-rate dynamics and unmodeled lever-arm centripetal accelerations are hypothesized to induce lateral perturbations associated with subsequent GNSS innovation gate rejections (486 fixes rejected).
 5. **Scientific Honesty:** Classical ZUPT and NHC are powerful local velocity stabilizers, but they are **not universal panaceas**. Their global trajectory efficacy is strictly bounded by mounting observability, turn dynamics, and covariance integrity.
 
 ---
@@ -430,14 +430,14 @@ The real-data benchmark evaluated Baseline A (Frozen Gate 2.3A ESKF + ZUPT) vs E
 
 | Recording ID | Config A H-RMSE (m) | Config B H-RMSE (m) | Change (%) | Vel RMSE Change | NHC Accepted / Candidates (%) | NHC Median NIS | Verdict / Mechanism |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :--- |
-| **S3A** | 2,346,827.79 | **620,666.46** | **-73.55%** | **-79.76%** | 4,039 / 7,579 (53.29%) | 1.60 | **Strong Win**: Rescued starved covariance |
-| **VTA1A** | 2,260,452.29 | **1,480,088.21** | **-34.52%** | **-39.50%** | 426 / 1,038 (41.04%) | 21.59 | **Cruise Win**: Continuous highway damping |
-| **S1** | 6,178,807.35 | 11,580,767.64 | +87.43% | **-6.29%** | 3,490 / 9,413 (37.08%) | 35.97 | **Mixed**: Short-term win (-43%), long-term starve |
-| **S2** | 26,126,179.13 | 42,389,910.67 | +62.25% | **-29.90%** | 4,465 / 12,910 (34.59%) | 42.86 | **Mixed**: Velocity bounded, heading unobservable |
-| **S4** | 20,132,520.62 | 37,351,981.92 | +85.53% | +65.78% | 2,250 / 16,630 (13.53%) | 60.77 | **Negative**: Long-duration covariance starvation |
-| **Y1** | 3,661,814.05 | 29,884,134.11 | +716.10% | +25.72% | 11,394 / 19,600 (58.13%) | 1.25 | **Failure Mode**: 106° unobservable yaw offset |
-| **VTA2** | **46.23** | 31,080.62 | +67,130% | +4,286% | 592 / 877 (67.50%) | 2.31 | **Failure Mode**: Turn dynamics & lever-arm lockout |
-| **M** | UNOBSERVABLE | UNOBSERVABLE | N/A | N/A | N/A | N/A | **Class F**: Zero standstills in calibration window |
+| **S3A** | 2,346,827.79 | **620,666.46** | **-73.55%** | **-79.76%** | 4,039 / 7,579 (53.29%) | 1.60 | **Improvement observed**: Bounded velocity drift during motion |
+| **VTA1A** | 2,260,452.29 | **1,480,088.21** | **-34.52%** | **-39.50%** | 426 / 1,038 (41.04%) | 21.59 | **Diagnostic evidence**: Velocity damping observed on highway cruise |
+| **S1** | 6,178,807.35 | 11,580,767.64 | +87.43% | **-6.29%** | 3,490 / 9,413 (37.08%) | 35.97 | **Mixed evidence**: Short-term improvement, long-term degradation |
+| **S2** | 26,126,179.13 | 42,389,910.67 | +62.25% | **-29.90%** | 4,465 / 12,910 (34.59%) | 42.86 | **Mixed evidence**: Velocity bounded, heading unobservable |
+| **S4** | 20,132,520.62 | 37,351,981.92 | +85.53% | +65.78% | 2,250 / 16,630 (13.53%) | 60.77 | **Degradation observed**: Covariance starvation hypothesis |
+| **Y1** | 3,661,814.05 | 29,884,134.11 | +716.10% | +25.72% | 11,394 / 19,600 (58.13%) | 1.25 | **Degradation observed**: 106° unobservable yaw offset hypothesis |
+| **VTA2** | **46.23** | 31,080.62 | +67,130% | +4,286% | 592 / 877 (67.50%) | 2.31 | **Degradation observed**: Turn dynamics & lever-arm hypothesis |
+| **M** | UNOBSERVABLE | UNOBSERVABLE | N/A | N/A | N/A | N/A | **Unobservable**: Zero standstills in calibration window |
 
 ```mermaid
 xychart-beta
@@ -459,24 +459,24 @@ xychart-beta
 
 ## 14 — Empirical Evidence Classification Across Constraints
 
-### 14.1 Positive Evidence
-- **S3A (The NHC Redemption):** While ZUPT alone suffered from covariance starvation during an extended 327s standstill, adding NHC constrained lateral and vertical velocity during motion, reducing H-RMSE by **-73.55%** ($2.35\text{M m} \to 620\text{ km}$) and Velocity RMSE by **-79.76%** ($7,052\text{ m/s} \to 1,428\text{ m/s}$).
-- **VTA1A (Expressway Cruising):** VTA1A is an open-road highway route with zero intermediate standstills. NHC safely engaged during straight-line cruising, reducing H-RMSE by **-34.52%** ($2.26\text{M m} \to 1.48\text{M m}$) and Velocity RMSE by **-39.50%**.
-- **VTA2 (ZUPT Sovereign Case):** Under observable heading, ZUPT reduced H-RMSE by **99.63%** ($12,544.15\text{ m} \to 46.23\text{ m}$) with a final endpoint error of **$5.11\text{ m}$**.
+### 14.1 Improvement Observed
+- **S3A (Trajectory Error Bounding):** While ZUPT alone exhibited covariance shrinkage during an extended 327s standstill, adding NHC constrained lateral and vertical velocity during motion, reducing H-RMSE by **-73.55%** ($2.35\text{M m} \to 620\text{ km}$) and Velocity RMSE by **-79.76%** ($7,052\text{ m/s} \to 1,428\text{ m/s}$).
+- **VTA1A (Diagnostic Observation During Cruising):** VTA1A was a negative-control route for the earlier ZUPT experiment because it contained no post-departure stationary intervals. Its improvement under NHC (H-RMSE reduced by **-34.52%** and Velocity RMSE by **-39.50%**) represents observed diagnostic evidence of cruise-phase velocity damping, rather than independent proof that NHC generalizes across all driving conditions.
+- **VTA2 (ZUPT Baseline Case):** Under observable heading, ZUPT reduced H-RMSE by **99.63%** ($12,544.15\text{ m} \to 46.23\text{ m}$) with a final endpoint error of **$5.11\text{ m}$**.
 
 ### 14.2 Mixed Evidence
-- **S1 (Short-Term Superiority vs Long-Term Covariance Collapse):**
+- **S1 (Short-Term Improvement vs Long-Term Degradation):**
   - Short-Term: At $t=10\text{ s}$, NHC reduced error by **-43.16%** ($4.30\text{ m}$ vs $7.57\text{ m}$). At $t=30\text{ s}$, NHC reduced error by **-51.15%** ($9.48\text{ m}$ vs $19.40\text{ m}$). Velocity RMSE was reduced by **-6.29%** and heading error by **$-9.96^\circ$**.
-  - Long-Term: Over 5,000 seconds, applying 3,490 NHC updates without covariance replenishment caused later GNSS fixes to be rejected, increasing aggregate H-RMSE.
-- **S2 (Velocity Bounding under Misassigned Yaw):** Velocity RMSE decreased by **-29.90%** ($53,086\text{ m/s} \to 37,212\text{ m/s}$), proving that NHC mechanically damped runaway velocity even with an unobservable heading.
+  - Long-Term: Over 5,000 seconds, applying 3,490 NHC updates without covariance replenishment was associated with subsequent rejection of later GNSS fixes. This observed association is consistent with covariance over-confidence/starvation; further isolation is required to establish causality.
+- **S2 (Velocity Bounding under Misassigned Yaw):** Velocity RMSE decreased by **-29.90%** ($53,086\text{ m/s} \to 37,212\text{ m/s}$), showing that NHC mechanically damped runaway velocity even with an unobservable heading.
 
-### 14.3 Negative Evidence
+### 14.3 Degradation Observed
 - **Y1 (Mounting Yaw Misalignment):** 11,394 updates were accepted with median NIS = 1.25. However, because true mounting yaw was misaligned by $\sim 106^\circ$, the filter enforced zero velocity along the true longitudinal axis of travel, degrading H-RMSE by **+716.10%**.
-- **VTA2 (Lever-Arm & Cornering Dynamics):** On a route where ZUPT alone achieved $46.23\text{ m}$ RMSE, NHC updates during turn transitions introduced centrifugal lever-arm errors, degrading covariance and locking out 486 GNSS fixes.
+- **VTA2 (Lever-Arm & Cornering Dynamics):** On a route where ZUPT alone achieved $46.23\text{ m}$ RMSE, NHC updates during turn transitions introduced centrifugal lever-arm errors, which were associated with subsequent rejection of 486 GNSS fixes.
 
 ---
 
-## 15 — Scientific Failure Analysis: The Fundamental Physical Limits of Kinematic Constraints
+## 15 — Scientific Failure Analysis: Observed Failure Modes and Hypotheses
 
 ```text
 Summary of NAVRIS Physical Failure Modes:
@@ -488,14 +488,16 @@ Summary of NAVRIS Physical Failure Modes:
 │   ├── Observed in: Y1 (+716% error)
 │   └── Mechanism: In straight-line departures, causal calibration falls back to identity.
 │       Enforcing v_y^v = 0 when C_b^v has 106° yaw error forces forward velocity into lateral drag.
-├── Failure Mode 3: Covariance Starvation
+├── Failure Mode 3: Covariance Starvation Hypothesis
 │   ├── Observed in: S3A (ZUPT alone), S4 (NHC)
-│   └── Mechanism: Repeated updates without process noise injection collapse covariance eigenvalues
-│       down to 10^-12, making innovation gating hypersensitive and rejecting valid GNSS fixes.
-├── Failure Mode 4: Turn Dynamics & Lever-Arm Centrifugal Perturbation
+│   └── Mechanism: Repeated updates without process noise injection reduce covariance eigenvalues
+│       down to 10^-12. This observed association is consistent with covariance over-confidence/starvation
+│       leading to subsequent GNSS gate rejections; further isolation is required to establish causality.
+├── Failure Mode 4: Turn Dynamics & Lever-Arm Centrifugal Perturbation Hypothesis
 │   ├── Observed in: VTA2 (+67,130% error with NHC)
 │   └── Mechanism: Unknown smartphone lever-arm r relative to vehicle CG creates unmodeled
-│       centripetal acceleration a_cent = omega x (omega x r), corrupting attitude and triggering gate lockout.
+│       centripetal acceleration a_cent = omega x (omega x r), hypothesized to corrupt attitude and
+│       associate with subsequent gate rejection.
 └── Failure Mode 5: Gating Lockout
     ├── Observed in: S2
     └── Mechanism: If velocity diverges prior to constraint engagement, innovation r = z - h(x)
@@ -510,7 +512,7 @@ Summary of NAVRIS Physical Failure Modes:
 2. **Kinematic Efficacy on Conditioned Trajectories:**
    - Standstill bounding via ZUPT achieves sub-10m navigation on VTA2 (99.63% RMSE reduction).
    - Cruising bounding via NHC achieves 73.55% RMSE reduction and 79.76% velocity error reduction on S3A.
-   - Cruising bounding via NHC achieves 34.52% RMSE reduction on continuous expressway VTA1A.
+   - Cruising bounding via NHC provided diagnostic evidence of lateral velocity damping (34.52% RMSE reduction) on continuous expressway VTA1A.
 3. **Causal Selectivity:** Both ZUPT and NHC detectors strictly use historical sample windows ($t \le t_k$) without look-ahead or ground-truth leakage.
 4. **Reproducibility:** Gate 2.3B Baseline A bit-for-bit reproduced Gate 2.3A Configuration B across all 8 recordings to 16 decimal places ($0.00\text{ m}$ discrepancy).
 
@@ -530,7 +532,7 @@ Summary of NAVRIS Physical Failure Modes:
 
 To enable interactive evaluation of NAVRIS trajectories, telemetry streams, and filter diagnostics, team member **Durva Patel** ([@Durva46](https://github.com/Durva46)) designed and implemented the **NAVRIS Navigation Telemetry Web Cockpit**:
 - **Repository:** [`https://github.com/Durva46/navris-sih-2026`](https://github.com/Durva46/navris-sih-2026)
-- **Features:** 3D interactive satellite map replay (Mapbox GL), multi-channel time-series telemetry charts (Chart.js), real-time NIS innovation gauges, and A/B comparison toggles.
+- **Features:** 3D interactive satellite map replay (MapLibre GL), multi-channel time-series telemetry charts (Chart.js), real-time NIS innovation gauges, and A/B comparison toggles.
 - **Transparency Notice:** The frontend operates in **Simulated / Replay Mode** using pre-computed telemetry JSONs and mock WebSocket feeds. It demonstrates UI/UX telemetry capabilities for SIH presentation and does not represent live on-device execution.
 
 ---
@@ -740,5 +742,5 @@ Detailed in Sections 11 and 13, and stored in:
 
 ---
 
-**Report Prepared for Technical Review & SIH Evaluation.**  
+**Report prepared for technical review and SIH 2026 evaluation.**  
 *NAVRIS Classical Navigation & Intelligent Systems Research Baseline.*

@@ -150,32 +150,32 @@ All benchmarks evaluate real vehicle telemetry from the public Oxford **IO-VNBD*
 
 | Recording | Environment | Duration | Gate 2.2 Baseline H-RMSE | Gate 2.3A (ZUPT) H-RMSE | Gate 2.3B (NHC) H-RMSE | Gate 2.3B vs Baseline Δ% | Classification |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :--- |
-| **S3A** | Urban / Arterial | 2,171.0 s | 110,485 m | 2,346,828 m | **620,666 m** | **-73.55% vs ZUPT** | **Positive Evidence** |
-| **VTA1A** | Continuous Highway | 2,489.4 s | 1,818,010 m | 2,260,452 m | **1,480,088 m** | **-34.52% vs ZUPT** | **Positive (Negative Control)** |
-| **VTA2** | Suburban Arterial | 1,012.7 s | 12,544.15 m | **46.23 m** | 31,080.62 m | **-99.63% (ZUPT Win)** | **ZUPT Positive / NHC Negative** |
-| **S1** | Mixed Suburban | 5,018.2 s | 36,695,857 m | **6,178,807 m** | 11,580,768 m | **-68.44% vs Base** | **Mixed Evidence** |
-| **S2** | Long Highway | 9,190.7 s | **16,055,424 m** | 26,126,179 m | 42,389,911 m | +62.25% vs ZUPT | **Negative Evidence** |
-| **S4** | Mixed Arterial | 9,290.1 s | 48,599,675 m | **20,132,520 m** | 37,351,982 m | **-23.14% vs Base** | **Mixed Evidence** |
-| **Y1** | Highway / Straight | 7,175.8 s | 4,102,231 m | **3,661,814 m** | 29,884,134 m | +716.10% vs ZUPT | **Negative Evidence** |
+| **S3A** | Urban / Arterial | 2,171.0 s | 110,485 m | 2,346,828 m | **620,666 m** | **-73.55% vs ZUPT** | **Improvement observed** |
+| **VTA1A** | Continuous Highway | 2,489.4 s | 1,818,010 m | 2,260,452 m | **1,480,088 m** | **-34.52% vs ZUPT** | **Diagnostic evidence** |
+| **VTA2** | Suburban Arterial | 1,012.7 s | 12,544.15 m | **46.23 m** | 31,080.62 m | **-99.63% (ZUPT)** | **ZUPT Improvement / NHC Degradation** |
+| **S1** | Mixed Suburban | 5,018.2 s | 36,695,857 m | **6,178,807 m** | 11,580,768 m | **-68.44% vs Base** | **Mixed evidence** |
+| **S2** | Long Highway | 9,190.7 s | **16,055,424 m** | 26,126,179 m | 42,389,911 m | +62.25% vs ZUPT | **Mixed evidence (Vel bounded, heading unobs)** |
+| **S4** | Mixed Arterial | 9,290.1 s | 48,599,675 m | **20,132,520 m** | 37,351,982 m | **-23.14% vs Base** | **Degradation observed vs ZUPT** |
+| **Y1** | Highway / Straight | 7,175.8 s | 4,102,231 m | **3,661,814 m** | 29,884,134 m | +716.10% vs ZUPT | **Degradation observed (Yaw offset)** |
 | **M** | High Vibration | 10,596.4 s | N/A | N/A | N/A | N/A | **Unobservable (Class F)** |
 
 ---
 
-### Key Empirical Highlights
+### Key Empirical Findings
 
-1. **The VTA2 ZUPT Benchmark Result:**
+1. **VTA2 Standstill Velocity Bounding Under ZUPT:**
    On recording VTA2, when heading is observable, adding causal ZUPT reduced horizontal RMSE from approximately **$12.5\text{ km}$ to $46.2\text{ m}$** (**$99.63\%$ error reduction**) with final position error of **$5.11\text{ m}$**.
    > *Scientific Qualification:* This is a recording-specific experimental result where traffic stops provided regular observability. It is **not** a guarantee of $46\text{ m}$ accuracy across arbitrary driving conditions.
 
-2. **The S3A NHC Benchmark Result:**
+2. **S3A Trajectory Improvement Observed Under NHC:**
    On recording S3A, adding Non-Holonomic Constraints during motion reduced horizontal RMSE from **$2.35\text{M m}$ to $620\text{k m}$** (**$73.55\%$ error reduction**), and velocity RMSE from $7,052\text{ m/s}$ to $1,428\text{ m/s}$ (**$-79.76\%$**), accepting 4,039 updates with a median NIS of $1.60$.
 
-3. **The VTA1A Negative-Control Cruise Verification:**
-   On recording VTA1A, which contains zero post-departure standstill intervals, NHC successfully accepted 426 cruising updates during high-speed driving, reducing horizontal RMSE by **$34.52\%$** (from $2.26\text{M m}$ to $1.48\text{M m}$) and velocity RMSE by **$39.50\%$**.
+3. **VTA1A Diagnostic Observation in Highway Cruising:**
+   VTA1A served as a negative-control route for the earlier Gate 2.3A ZUPT experiment because it contained no post-departure stationary intervals. Under Gate 2.3B, NHC engaged during high-speed cruise (426 updates accepted), showing an observed reduction in horizontal RMSE of **$34.52\%$** (from $2.26\text{M m}$ to $1.48\text{M m}$) and velocity RMSE of **$39.50\%$**. This provides diagnostic evidence of in-motion lateral velocity bounding, though not independent proof of universal generalization.
 
 ---
 
-### Why the Failure Cases Matter
+### Observed Failure Modes and Hypotheses
 
 A central requirement of rigorous engineering research is identifying exactly where, why, and how classical filters fail:
 
@@ -186,12 +186,14 @@ Documented Failure Mechanisms:
 │       ~106° relative to the vehicle chassis. Applying NHC forced longitudinal forward speed
 │       into the perceived lateral axis, injecting correlated error that caused +716% divergence.
 ├── 2. Covariance Starvation (Recordings S1, S2, S4)
-│   └── Finding: Applying continuous 10 Hz updates without a minimum variance floor collapsed
-│       covariance eigenvalues down to 1e-10 to 1e-12. The filter became hyper-confident and
-│       rejected subsequent valid GNSS updates.
+│   └── Finding: Applying continuous 10 Hz updates without a minimum variance floor reduced
+│       covariance eigenvalues down to 1e-10 to 1e-12. This observed association is consistent
+│       with covariance over-confidence/starvation leading to subsequent GNSS gate rejections;
+│       further isolation is required to establish causality.
 └── 3. Turn Dynamics & Lever-Arm Perturbations (Recording VTA2)
-    └── Finding: On VTA2, frequent 90° cornering turns caused lever-arm tangential velocity (omega x r)
-        during turn transitions to perturb the filter covariance, locking out 486 GNSS fixes.
+    └── Finding: On VTA2, frequent 90° cornering turns are hypothesized to induce lever-arm tangential
+        velocity (omega x r) perturbations during turn transitions, which were associated with
+        subsequent GNSS innovation gate rejections (486 fixes rejected).
 ```
 
 ---
@@ -208,7 +210,7 @@ The diagnostic plots below were generated from real IO-VNBD telemetry:
 | Negative-Control Error Bounding (VTA1A) | Cornering Lever-Arm Failure Mode (VTA2) |
 | :---: | :---: |
 | ![VTA1A Error](docs/plots/gate2_3b/vta1a_horizontal_error_vs_time.png) | ![VTA2 Failure](docs/plots/gate2_3b/vta2_failure_analysis.png) |
-| *Figure 3: VTA1A horizontal error reduction (-34.5%) during active highway cruise.* | *Figure 4: VTA2 cornering dynamics provoking subsequent GNSS innovation gate lockout.* |
+| *Figure 3: VTA1A horizontal error reduction (-34.5%) observed during highway cruise.* | *Figure 4: VTA2 cornering dynamics associated with subsequent GNSS innovation gate rejection.* |
 
 ---
 
