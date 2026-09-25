@@ -22,6 +22,7 @@ from navris.calibration import (
     evaluate_turn_cross_product,
     identify_gyro_mapping,
     calibrate_causal_s1,
+    calibrate_causal_recording,
     dcm_to_quat
 )
 from navris.inertial.frames import (
@@ -342,3 +343,74 @@ def test_strict_causality_zero_lookahead():
     np.testing.assert_array_equal(res1.R_body_vehicle, res2.R_body_vehicle)
     np.testing.assert_array_equal(res1.initial_attitude_q, res2.initial_attitude_q)
     assert res1.mounting_yaw_deg == res2.mounting_yaw_deg
+
+
+def test_calibrate_causal_recording_unobservable():
+    """Verifies that datasets without stationary standstills are classified as UNOBSERVABLE."""
+    n = 200
+    dt = 0.1
+    t = np.arange(n) * dt
+    # Continuously moving vehicle with high acceleration / speed
+    df_moving = pd.DataFrame({
+        'time_s': t,
+        'phone_accel_x_mps2': np.full(n, 2.0),
+        'phone_accel_y_mps2': np.zeros(n),
+        'phone_accel_z_mps2': np.full(n, 9.81),
+        'phone_gyro_x_radps': np.zeros(n),
+        'phone_gyro_y_radps': np.zeros(n),
+        'phone_gyro_z_radps': np.zeros(n),
+        'phone_gps_speed_mps': np.full(n, 15.0),
+        'phone_gps_is_new_fix': np.zeros(n, dtype=bool)
+    })
+
+    is_obs, status_str, calib_dict, calib_res, t_dec = calibrate_causal_recording(df_moving, rec_id="TEST_MOVING")
+    assert not is_obs
+    assert status_str == "UNOBSERVABLE"
+    assert calib_dict['calibration_status'] == "UNOBSERVABLE"
+    assert "Class 6" in calib_dict['observability_classification']
+    assert calib_res is None
+
+
+def test_calibrate_causal_recording_synthetic():
+    """Verifies calibrate_causal_recording on synthetic stationary standstill followed by acceleration."""
+    n_stat = 100
+    n_acc = 100
+    n_total = n_stat + n_acc
+    dt = 0.1
+    t = np.arange(n_total) * dt
+
+    # Stationary segment: t in [0, 10s]
+    ax = np.zeros(n_total)
+    ay = np.zeros(n_total)
+    az = np.full(n_total, 9.80665)
+    gx = np.zeros(n_total)
+    gy = np.zeros(n_total)
+    gz = np.zeros(n_total)
+    spd = np.zeros(n_total)
+
+    # Accelerate along +X: t in [10s, 20s]
+    ax[n_stat:] = 1.5
+    spd[n_stat:] = np.cumsum(ax[n_stat:]) * dt
+
+    df_synth = pd.DataFrame({
+        'time_s': t,
+        'phone_accel_x_mps2': ax,
+        'phone_accel_y_mps2': ay,
+        'phone_accel_z_mps2': az,
+        'phone_gyro_x_radps': gx,
+        'phone_gyro_y_radps': gy,
+        'phone_gyro_z_radps': gz,
+        'phone_gps_speed_mps': spd,
+        'phone_gps_is_new_fix': np.zeros(n_total, dtype=bool)
+    })
+
+    is_obs, status_str, calib_dict, calib_res, t_dec = calibrate_causal_recording(df_synth, rec_id="TEST_SYNTH", max_search_time_s=15.0, motion_window_s=5.0)
+    assert is_obs
+    assert status_str == "PASS"
+    assert calib_res is not None
+    assert calib_res.is_calibrated
+    assert abs(calib_res.leveling.roll_deg) < 0.1
+    assert abs(calib_res.leveling.pitch_deg) < 0.1
+    # Forward angle along +X in phone frame (alpha_fwd ~ 0 deg)
+    assert abs(calib_res.forward_angle_phone_frame_deg) < 1.0
+

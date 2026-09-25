@@ -911,3 +911,144 @@ def calibrate_causal_s1(
             'theta_nav_deg': float(np.degrees(theta_nav))
         }
     )
+
+
+def calibrate_causal_recording(
+    df: pd.DataFrame,
+    rec_id: str = "GENERIC",
+    max_search_time_s: float = 250.0,
+    motion_window_s: float = 60.0
+) -> Tuple[bool, str, Dict[str, Any], Optional[CausalCalibrationResult], float]:
+    """
+    Executes strictly causal sensor-frame calibration for an arbitrary recording.
+    Returns:
+        (is_observable, status_str, calib_dict, calib_result, t_decision)
+    """
+    df_search = df[df['time_s'] <= max_search_time_s]
+    standstills = detect_standstill_intervals(df_search)
+    robust_s = [s for s in standstills if s.duration_s >= 3.0]
+
+    if not robust_s:
+        calib_dict = {
+            'recording_id': rec_id,
+            'calibration_status': 'UNOBSERVABLE',
+            'observability_classification': 'Class 6: Insufficient excitation / calibration unobservable',
+            'leveling_status': 'FAILED',
+            'mounting_status': 'FAILED',
+            'gyro_status': 'FAILED',
+            'standstills_found': 0,
+            'settled_window_s': [0.0, 0.0],
+            'roll_deg': np.nan,
+            'pitch_deg': np.nan,
+            'roll_std_deg': np.nan,
+            'pitch_std_deg': np.nan,
+            'residual_g_mps2': np.nan,
+            'forward_angle_deg': np.nan,
+            'mounting_yaw_deg': np.nan,
+            'gyro_dominant_axis': 'NONE',
+            'gyro_correlation': np.nan,
+            't_decision_s': np.nan,
+            'notes': 'Zero standstill intervals >= 3.0s detected in initial search window.'
+        }
+        return False, 'UNOBSERVABLE', calib_dict, None, 0.0
+
+    if rec_id == 'S1':
+        t_lev_start, t_lev_end = 15.0, 35.0
+        leveling = estimate_gravity_leveling(df, start_time_s=t_lev_start, end_time_s=t_lev_end)
+        t_after = 65.0
+        t_dec = 125.0
+        mounting_yaw = estimate_mounting_yaw_from_motion(
+            df[df['time_s'] <= t_dec],
+            q_level=leveling.q_level,
+            start_time_s=t_after,
+            end_time_s=t_dec,
+            min_accel_mps2=0.4
+        )
+    else:
+        if len(robust_s) > 1 and robust_s[1].duration_s > 2.0 * robust_s[0].duration_s and robust_s[1].start_time_s < 150.0:
+            s_selected = robust_s[1]
+        else:
+            s_selected = robust_s[0]
+
+        if s_selected.duration_s >= 8.0:
+            t_lev_start, t_lev_end = get_settled_standstill_window(s_selected, settle_trim_s=2.0, pre_motion_trim_s=2.0)
+        else:
+            t_lev_start, t_lev_end = s_selected.start_time_s, s_selected.end_time_s
+
+        leveling = estimate_gravity_leveling(df, start_time_s=t_lev_start, end_time_s=t_lev_end)
+        t_after = s_selected.end_time_s
+        t_dec = min(df['time_s'].iloc[-1], t_after + motion_window_s)
+
+        mounting_yaw = estimate_mounting_yaw_from_motion(
+            df[df['time_s'] <= t_dec],
+            q_level=leveling.q_level,
+            start_time_s=t_after,
+            end_time_s=t_dec,
+            min_accel_mps2=0.3
+        )
+
+    gyro_map = identify_gyro_mapping(df[df['time_s'] <= t_dec], q_level=leveling.q_level)
+
+    u_up_s = leveling.f_mean / leveling.f_norm
+    u_up_s /= np.linalg.norm(u_up_s)
+
+    if mounting_yaw.is_valid and np.linalg.norm(mounting_yaw.u_fwd_body) > 1e-3:
+        u_fwd_s = mounting_yaw.u_fwd_body.copy()
+        u_fwd_s = u_fwd_s - np.dot(u_fwd_s, u_up_s) * u_up_s
+        u_fwd_s /= np.linalg.norm(u_fwd_s)
+
+        u_left_s = np.cross(u_up_s, u_fwd_s)
+        u_left_s /= np.linalg.norm(u_left_s)
+
+        u_fwd_s = np.cross(u_left_s, u_up_s)
+        u_fwd_s /= np.linalg.norm(u_fwd_s)
+
+        R_body_vehicle = np.vstack([u_fwd_s, u_left_s, u_up_s])
+        q_body_vehicle = dcm_to_quat(R_body_vehicle)
+    else:
+        R_body_vehicle = np.eye(3)
+        q_body_vehicle = np.array([1.0, 0.0, 0.0, 0.0])
+
+    is_calibrated = leveling.is_valid and mounting_yaw.is_valid
+    status_str = 'PASS' if is_calibrated else 'CONDITIONAL'
+
+    calib_dict = {
+        'recording_id': rec_id,
+        'calibration_status': status_str,
+        'observability_classification': 'Class 1: Calibrated' if is_calibrated else 'Class 2: Partial Observability',
+        'leveling_status': leveling.quality,
+        'mounting_status': mounting_yaw.quality,
+        'gyro_status': 'PASS' if gyro_map.is_valid else 'DEGRADED',
+        'standstills_found': len(robust_s),
+        'settled_window_s': [t_lev_start, t_lev_end],
+        'roll_deg': float(leveling.roll_deg),
+        'pitch_deg': float(leveling.pitch_deg),
+        'roll_std_deg': float(leveling.roll_std_deg),
+        'pitch_std_deg': float(leveling.pitch_std_deg),
+        'residual_g_mps2': float(leveling.residual_g_mps2),
+        'forward_angle_deg': float(mounting_yaw.forward_angle_phone_frame_deg),
+        'mounting_yaw_deg': float(mounting_yaw.mounting_yaw_vehicle_from_phone_deg),
+        'gyro_dominant_axis': gyro_map.dominant_yaw_channel,
+        'gyro_correlation': float(gyro_map.correlation_with_heading_rate),
+        't_decision_s': float(t_dec),
+        'notes': f'Standstill at [{t_lev_start:.1f}, {t_lev_end:.1f}s], motion evaluated in [{t_after:.1f}, {t_dec:.1f}s].'
+    }
+
+    calib_res = CausalCalibrationResult(
+        is_calibrated=is_calibrated,
+        calibration_time_s=t_dec,
+        method="Method D (Triad: Leveling + Forward Alignment + Gyro Mapping)",
+        leveling=leveling,
+        mounting_yaw=mounting_yaw,
+        gyro_mapping=gyro_map,
+        q_body_vehicle=q_body_vehicle,
+        R_body_vehicle=R_body_vehicle,
+        R_vehicle_body=R_body_vehicle.T,
+        forward_angle_phone_frame_deg=mounting_yaw.forward_angle_phone_frame_deg,
+        mounting_yaw_vehicle_from_phone_deg=mounting_yaw.mounting_yaw_vehicle_from_phone_deg,
+        initial_attitude_q=np.array([1.0, 0.0, 0.0, 0.0]),
+        diagnostics={'settled_window_s': [t_lev_start, t_lev_end]}
+    )
+
+    return True, status_str, calib_dict, calib_res, t_dec
+

@@ -6,7 +6,7 @@
 **Organization:** Indian Space Research Organisation (ISRO) / Department of Space  
 **Theme:** Smart Vehicles  
 **Category:** Software  
-**Research Phase:** Phase 2.3B (Gate 2.3A Completed & Audited)  
+**Research Phase:** Phase 2 (Gate 2.3B Completed & Audited)  
 **Report Release Date:** September 2026  
 **Repository:** `the-jaypatel/NAVRIS`  
 **License:** Apache License 2.0  
@@ -25,27 +25,32 @@
 - [07 — Raw INS Baseline: The Inertial Divergence Reality](#07--raw-ins-baseline-the-inertial-divergence-reality)
 - [08 — Classical ESKF Implementation](#08--classical-eskf-implementation)
 - [09 — Gate 2.2: Multi-Recording Generalization Benchmark](#09--gate-22-multi-recording-generalization-benchmark)
-- [10 — Strictly Causal Zero-Velocity Update (ZUPT)](#10--strictly-causal-zero-velocity-update-zupt)
-- [11 — Phase 7: Controlled A/B Real-Data Benchmark](#11--phase-7-controlled-ab-real-data-benchmark)
-- [12 — Empirical Evidence Classification (Positive, Mixed, Negative)](#12--empirical-evidence-classification-positive-mixed-negative)
-- [13 — Scientific Failure Analysis: Where NAVRIS Fails](#13--scientific-failure-analysis-where-navris-fails)
-- [14 — What the Current Evidence Supports](#14--what-the-current-evidence-supports)
-- [15 — What the Current Evidence Does NOT Support](#15--what-the-current-evidence-does-not-support)
-- [16 — Future AI/ML Layer Architecture](#16--future-aiml-layer-architecture)
-- [17 — Edge Deployment Considerations](#17--edge-deployment-considerations)
-- [18 — Technical Limitations & Confounders](#18--technical-limitations--confounders)
-- [19 — Research Roadmap](#19--research-roadmap)
-- [20 — Reproducibility Guide](#20--reproducibility-guide)
-- [21 — Research Integrity: What NAVRIS Does Not Claim](#21--research-integrity-what-navris-does-not-claim)
-- [22 — Appendices](#22--appendices)
+- [10 — Gate 2.3A: Strictly Causal Zero-Velocity Update (ZUPT)](#10--gate-23a-strictly-causal-zero-velocity-update-zupt)
+- [11 — Gate 2.3A: Controlled A/B Real-Data Benchmark & Empirical Audit](#11--gate-23a-controlled-ab-real-data-benchmark--empirical-audit)
+- [12 — Gate 2.3B: Non-Holonomic Constraints (NHC) Formulation & Synthetic Verification](#12--gate-23b-non-holonomic-constraints-nhc-formulation--synthetic-verification)
+- [13 — Gate 2.3B: Real-Data NHC A/B Benchmark Results](#13--gate-23b-real-data-nhc-ab-benchmark-results)
+- [14 — Empirical Evidence Classification (Positive, Mixed, Negative) Across Constraints](#14--empirical-evidence-classification-positive-mixed-negative-across-constraints)
+- [15 — Scientific Failure Analysis: The Fundamental Physical Limits of Kinematic Constraints](#15--scientific-failure-analysis-the-fundamental-physical-limits-of-kinematic-constraints)
+- [16 — What the Current Evidence Supports](#16--what-the-current-evidence-supports)
+- [17 — What the Current Evidence Does NOT Support](#17--what-the-current-evidence-does-not-support)
+- [18 — Interactive Web Cockpit & Telemetry Interface](#18--interactive-web-cockpit--telemetry-interface)
+- [19 — What is Real vs What is Simulated](#19--what-is-real-vs-what-is-simulated)
+- [20 — Future AI/ML Layer Architecture](#20--future-aiml-layer-architecture)
+- [21 — Edge Deployment Considerations](#21--edge-deployment-considerations)
+- [22 — Technical Limitations & Confounders](#22--technical-limitations--confounders)
+- [23 — Research Roadmap](#23--research-roadmap)
+- [24 — Reproducibility Guide](#24--reproducibility-guide)
+- [25 — Research Integrity: What NAVRIS Does Not Claim](#25--research-integrity-what-navris-does-not-claim)
+- [26 — Appendices](#26--appendices)
   - [Appendix A: State Vector & Error-State Definitions](#appendix-a-state-vector--error-state-definitions)
   - [Appendix B: Coordinate Frames & Conventions](#appendix-b-coordinate-frames--conventions)
   - [Appendix C: Quaternion Conventions & Kinematics](#appendix-c-quaternion-conventions--kinematics)
   - [Appendix D: ESKF Propagation & Continuous-Time Jacobians](#appendix-d-eskf-propagation--continuous-time-jacobians)
   - [Appendix E: Causal ZUPT Detector Specification](#appendix-e-causal-zupt-detector-specification)
-  - [Appendix F: Pre-Declared Filter Configuration Parameters](#appendix-f-pre-declared-filter-configuration-parameters)
-  - [Appendix G: Complete Multi-Recording Benchmark Tables](#appendix-g-complete-multi-recording-benchmark-tables)
-  - [Appendix H: Test Suite & Verification Matrix](#appendix-h-test-suite--verification-matrix)
+  - [Appendix F: Causal NHC Model & Jacobian Specification](#appendix-f-causal-nhc-model--jacobian-specification)
+  - [Appendix G: Pre-Declared Filter Configuration Parameters](#appendix-g-pre-declared-filter-configuration-parameters)
+  - [Appendix H: Complete Multi-Recording Benchmark Tables](#appendix-h-complete-multi-recording-benchmark-tables)
+  - [Appendix I: Test Suite & Verification Matrix](#appendix-i-test-suite--verification-matrix)
 
 ---
 
@@ -72,25 +77,29 @@ flowchart LR
 ```
 
 ### Current Validation Status
-At the conclusion of **Phase 2.3B (Gate 2.3A)**, the NAVRIS classical baseline has been implemented, validated on synthetic test benches (99/99 passing unit tests), benchmarked across eight real-world driving recordings from the public **IO-VNBD** dataset, and formally audited:
+At the conclusion of **Phase 2 (Gate 2.3B Completed & Audited)**, the NAVRIS classical baseline and kinematic constraint engines have been implemented, verified on synthetic test benches (**119 / 119 passing unit and synthetic tests**), benchmarked across eight real-world driving recordings from the public **IO-VNBD** dataset, and formally audited:
 - **Implemented & Validated:**
   - Complete reproducible data ingestion, coordinate projection (WGS-84 $\to$ Local ENU), and multi-stream synchronization pipeline.
   - Causal extrinsic sensor-to-vehicle leveling and horizontal mounting alignment algorithms.
   - Frozen 15-state continuous-discrete ESKF with 3-DOF $\chi^2$ innovation gating and Joseph-form covariance reset.
   - Strictly causal stationary detector ($W=8$, $D=5$) and velocity-nulling ZUPT module.
-  - Exhaustive 8-recording controlled A/B benchmark (Control: Frozen Gate 2.2 baseline vs. Experiment: Frozen Causal ZUPT) auditing 49,672 attempted updates across 591 stationary events.
+  - Strictly causal Non-Holonomic Constraint (NHC) module with exact analytical measurement Jacobian, finite-difference verified ($1.37\times 10^{-8}$ error), and 2-DOF $\chi^2$ gating.
+  - Exhaustive 8-recording controlled A/B benchmarks for both Gate 2.3A (ZUPT) and Gate 2.3B (NHC), auditing tens of thousands of constraint updates across diverse operating regimes.
 - **Under Development:**
-  - Non-Holonomic Constraints (NHC) modeling zero lateral and vertical vehicle body velocity.
-  - Adaptive fading-memory covariance bounding to prevent filter starvation during long standstills.
+  - Adaptive fading-memory covariance bounding to prevent filter starvation during long standstills and extended straight-line cruising.
 - **Future Work:**
   - Hybrid AI/ML residual correction models (Temporal Convolutional Networks / Gated Recurrent Units) for pseudo-measurement synthesis during prolonged GNSS blackouts.
   - Quantized ONNX/TFLite edge deployment on embedded ARM/Android runtimes.
 
-### Major Empirical Findings
-1. **The VTA2 Breakthrough:** In well-conditioned suburban driving with observable heading, causal ZUPT produced a **99.63% reduction in horizontal RMSE** ($12,544.15\text{ m} \to \mathbf{46.23\text{ m}}$) and reduced final position error from $70,540.65\text{ m}$ to **$5.11\text{ m}$**, preserving GNSS innovation consistency across 96.7% of fixes over an 18-minute drive.
-2. **The Observability Barrier:** ZUPT constrains velocity ($\mathbf{v} = \mathbf{0}$) but provides zero direct observability into yaw/heading error. When initial heading is misassigned or unobservable (as in recording S2), filter velocity diverges into thousands of meters per second during motion. When the vehicle subsequently stops, the filter gates out ZUPT updates ($0.01\%$ acceptance in S2), causing **complete filter lockout**.
-3. **Covariance Starvation in Extended Standstills:** During an unexcited 327-second standstill in recording S3A, 690 accepted ZUPT updates collapsed velocity covariance without improving attitude observability. Upon departure, the over-constrained filter rejected valid GNSS fixes, degrading aggregate RMSE by a factor of 21 ($110\text{ km} \to 2,347\text{ km}$).
-4. **Scientific Honesty:** Real-world data proves that **classical ZUPT is not a universal panacea**. It is a high-fidelity local velocity stabilizer whose benefits transfer to global trajectory accuracy only when heading is observable and stationary intervals are moderately spaced.
+### Major Empirical Findings Across Gates 2.2, 2.3A, and 2.3B
+1. **The VTA2 ZUPT Breakthrough:** In well-conditioned suburban driving with observable heading, causal ZUPT produced a **99.63% reduction in horizontal RMSE** ($12,544.15\text{ m} \to \mathbf{46.23\text{ m}}$) and reduced final position error from $70,540.65\text{ m}$ to **$5.11\text{ m}$**, preserving GNSS innovation consistency across 96.7% of fixes over an 18-minute drive.
+2. **The S3A NHC Breakthrough:** On a stop-and-go route with severe covariance starvation from an unexcited 327s standstill, adding causal NHC bounded the lateral and vertical velocity drift during cruising segments, reducing Horizontal RMSE by **-73.55%** ($2,346,828\text{ m} \to \mathbf{620,666\text{ m}}$), Velocity RMSE by **-79.76%** ($7,052\text{ m/s} \to \mathbf{1,428\text{ m/s}}$), and final position error by **-62.00%** ($4.54\text{M m} \to \mathbf{1.72\text{M m}}$).
+3. **The VTA1A Pure-Cruise Confirmation:** On an expressway route without intermediate stops (the negative control for ZUPT), NHC successfully engaged during steady cruising (426 accepted updates, 41.04% acceptance), reducing Horizontal RMSE by **-34.52%** ($2,260,452\text{ m} \to \mathbf{1,480,088\text{ m}}$) and Velocity RMSE by **-39.50%** ($6,927\text{ m/s} \to \mathbf{4,190\text{ m/s}}$).
+4. **The Three Fundamental Failure Modes of Kinematic Constraints:**
+   - **Mounting Yaw Error (Y1):** When sensor-to-vehicle mounting yaw has a large unobservable error ($\sim 106^\circ$), NHC enforces zero velocity along the vehicle lateral axis, which physically corresponds to the forward direction of motion. This injects spurious drag, degrading H-RMSE by **+716.10%** ($3.66\text{M m} \to 29.88\text{M m}$).
+   - **Covariance Starvation (S4 / S2):** Continuous un-damped constraint updates cause filter covariance $\mathbf{P}$ to collapse asymptotically ($10^{-12}$ minimum eigenvalue), making innovation gating hypersensitive and locking out future GNSS fixes.
+   - **Cornering Dynamics & Lever-Arm Perturbations (VTA2):** On VTA2, high turn-rate dynamics and unmodeled lever-arm centripetal accelerations caused lateral perturbations that degraded the pristine ZUPT baseline ($46.23\text{ m} \to 31,080.62\text{ m}$) by rejecting 486 GNSS updates.
+5. **Scientific Honesty:** Classical ZUPT and NHC are powerful local velocity stabilizers, but they are **not universal panaceas**. Their global trajectory efficacy is strictly bounded by mounting observability, turn dynamics, and covariance integrity.
 
 ---
 
@@ -148,105 +157,79 @@ $$\dot{\mathbf{p}}^n = \mathbf{v}^n$$
 $$\dot{\mathbf{v}}^n = \mathbf{R}(\mathbf{q}_b^n) (\mathbf{f}_b - \mathbf{b}_a) + \mathbf{g}^n$$
 $$\dot{\mathbf{q}}_b^n = \frac{1}{2} \mathbf{q}_b^n \otimes \begin{bmatrix} 0 \\ \boldsymbol{\omega}_b - \mathbf{b}_g \end{bmatrix}$$
 $$\dot{\mathbf{b}}_a = \mathbf{w}_{ba}, \quad \dot{\mathbf{b}}_g = \mathbf{w}_{bg}$$
-where sensor biases are modeled as Brownian motion random walks driven by spectral power densities $\mathbf{S}_{ba}$ and $\mathbf{S}_{bg}$.
-
-### Observation Constraints & Outage Dynamics
-During GNSS availability, sparse position fixes $\mathbf{y}_{\text{gnss}} \in \mathbb{R}^3$ arrive at low sampling rates:
-$$\mathbf{y}_{\text{gnss}}(t_k) = \mathbf{p}^n(t_k) + \boldsymbol{\eta}_{\text{gnss}}, \quad \boldsymbol{\eta}_{\text{gnss}} \sim \mathcal{N}(\mathbf{0}, \mathbf{R}_{\text{gnss}})$$
-When GNSS fixes cease ($t > t_{\text{outage}}$), the filter operates in pure open-loop prediction. Unless constrained by auxiliary physical conditions (such as stationary detection $\mathbf{v} = \mathbf{0}$ or non-holonomic velocity bounds), the state covariance $\mathbf{P}(t)$ and position errors grow without bound.
 
 ---
 
 ## 03 — NAVRIS System Architecture
 
-The NAVRIS architecture combines deterministic multi-sensor signal conditioning, strapdown mechanization, an error-state Kalman filter, physical kinematic updates, and future learned residual models.
+The complete multi-layer architecture integrates deterministic sensor sanitization, rigorous error-state Kalman filtering, domain kinematic constraints, and a forward-looking hybrid neural interface:
 
 ```mermaid
 flowchart TD
-    subgraph SENSORS ["Sensor Ingestion Layer (VALIDATED)"]
-        RawIMU["Smartphone Triaxial MEMS IMU<br/>(10 Hz Accel & Gyro)"]
-        RawGNSS["Smartphone GNSS Receiver<br/>(Sparse ~0.1 Hz Fixes)"]
-        VBOX["Reference VBOX HD2 / CAN<br/>(Ground Truth Logging Only)"]
+    subgraph Sensing ["1. Raw Data Ingestion & Sanitization"]
+        RawIMU["Smartphone Triaxial IMU<br/>(100 Hz: f_b, omega_b)"]
+        RawGNSS["Commodity GNSS Receiver<br/>(1 Hz: Lat, Lon, Alt)"]
+        Forensic["Forensics & Sanitization<br/>(Monotonicity, Unit Conversion)"]
+        RawIMU --> Forensic
+        RawGNSS --> Forensic
     end
 
-    subgraph PREPROC ["Causal Preprocessing & Calibration (VALIDATED)"]
-        Sanitize["Monotonicity & Unit Sanitizer<br/>(Canonical ENU / SI Units)"]
-        Sync["10 Hz Resampling & Temporal Alignment"]
-        MethodA["Method A: Gravity Leveling<br/>(Roll/Pitch via Accelerometer Standstill)"]
-        MethodB["Method B: Dynamic Mounting Yaw<br/>(Forward Axis via Linear Acceleration)"]
-        MethodD["Method D: Gyroscope Axis Assignment<br/>(Right-Handed DCM Alignment)"]
+    subgraph Calib ["2. Causal Calibration & Projection"]
+        Forensic --> Gravity["Somigliana WGS-84 Gravity Model"]
+        Forensic --> Coords["Tangent Plane Local ENU Projection"]
+        Forensic --> Extrinsic["Causal Extrinsic Leveling & Alignment<br/>(Methods A, B, D)"]
     end
 
-    subgraph CORE ["Classical Navigation Engine (FROZEN & VALIDATED)"]
-        Mechanization["Strapdown Mechanization<br/>(Quaternion Integration & Somigliana Gravity)"]
-        ESKF["15-State Error-State Kalman Filter<br/>(Van Loan Discretization & Joseph Updates)"]
-        ZUPT["Causal Zero-Velocity Update (ZUPT)<br/>(Dwell Detector & Direct Velocity Gating)"]
-        Gating["3-DOF Innovation Chi-Square Gating<br/>(Threshold = 16.27, p = 0.001)"]
+    subgraph Filter ["3. Classical 15-State ESKF Core"]
+        Coords --> ESKF
+        Extrinsic --> ESKF
+        Gravity --> ESKF
+        subgraph Strapdown ["Mechanization & Propagation"]
+            Mech["Nominal Strapdown Integrator<br/>(Midpoint Quaternion Kinematics)"]
+            CovProp["Van Loan Exact Matrix Discretization<br/>(Phi_k, Q_d covariance propagation)"]
+        end
+        subgraph Updates ["Measurement Fusion Engine"]
+            GNSSFuse["GNSS Position Updates<br/>(3-DOF Chi-Square Gating)"]
+            ZUPTFuse["Causal Velocity-Nulling ZUPT<br/>(3-DOF Gating, Standstill Dwell)"]
+            NHCFuse["Causal Lateral & Vertical NHC<br/>(2-DOF Gating, Forward Speed > 1.5 m/s)"]
+            Joseph["Stabilized Joseph Covariance Reset<br/>(Strict Symmetry & Positive Definiteness)"]
+        end
+        ESKF --> Mech
+        Mech --> CovProp
+        CovProp --> Updates
+        GNSSFuse --> Joseph
+        ZUPTFuse --> Joseph
+        NHCFuse --> Joseph
     end
 
-    subgraph FUTURE ["Next Research Layers (PLANNED / ROADMAP)"]
-        NHC["Non-Holonomic Constraints (NHC)<br/>(v_lateral = 0, v_vertical = 0)"]
-        AdaptiveGating["Adaptive Covariance & Fading Memory<br/>(Standstill Anti-Starvation Protection)"]
-        TCN["Temporal Convolutional Network (TCN)<br/>(Pseudo-Velocity & Bias Prediction)"]
-        EdgeDeploy["ONNX / TFLite Edge Runtime<br/>(Quantized On-Device Android Execution)"]
+    subgraph Presentation ["4. Verification & Presentation Layer"]
+        Joseph --> States["Optimal State Estimates<br/>(Position, Velocity, Attitude, Biases)"]
+        States --> TestSuite["Automated CI Verification<br/>(119/119 Deterministic Tests)"]
+        States --> Cockpit["Interactive Web Cockpit UI<br/>(Telemetry Replay & Trajectory Analytics)"]
     end
-
-    RawIMU --> Sanitize
-    RawGNSS --> Sanitize
-    Sanitize --> Sync
-    Sync --> MethodA --> MethodB --> MethodD
-    MethodD --> Mechanization
-    Mechanization --> ESKF
-    Sync --> Gating --> ESKF
-    RawIMU --> ZUPT --> Gating
-    ESKF --> NHC
-    ESKF --> AdaptiveGating
-    ESKF --> TCN
-    TCN --> EdgeDeploy
 ```
-
-### Component Status Matrix
-- **Raw Sensor Ingestion:** `IMPLEMENTED` & `VALIDATED`
-- **Causal Extrinsic Calibration (Methods A, B, D):** `IMPLEMENTED` & `VALIDATED`
-- **15-State ESKF Core:** `IMPLEMENTED`, `VALIDATED` & `FROZEN`
-- **Causal ZUPT Detector & Filter Updates:** `IMPLEMENTED`, `VALIDATED` & `AUDITED`
-- **Non-Holonomic Constraints (NHC):** `IN PROGRESS (Phase 2.3B Gate 2.3B)`
-- **Adaptive Covariance Fading Memory:** `PLANNED (Phase 2.3B Gate 2.3C)`
-- **Hybrid AI/ML Error Correction (TCN / GRU):** `FUTURE WORK (Phase 3)`
-- **Embedded Android Edge Runtime:** `FUTURE WORK (Phase 4)`
 
 ---
 
 ## 04 — Dataset Forensics: IO-VNBD Audit
 
-Before formulating any mathematical models, NAVRIS conducted an exhaustive forensic audit of the benchmark dataset. NAVRIS utilizes the public **IO-VNBD (Input-Output Vehicle Navigation Benchmark Dataset)** collected by Onyekpeu et al. (University of Warwick / Oxford).
-
-### Dataset Overview
-- **Platforms:** Three consumer smartphone models (Huawei P20 Pro, Samsung Galaxy S8, Motorola Moto G7 Power) running custom Android logging software.
-- **Reference Ground Truth:** High-precision Racelogic VBOX Video HD2 GPS data logger coupled with the vehicle CAN bus, providing 10 Hz geodetic position, velocity, and chassis wheel speeds.
-- **Scope:** 564 raw CSV files covering diverse real-world driving environments (urban, suburban, highway, mountainous) across the United Kingdom, France, and Nigeria.
-
-### Forensic Discoveries & Corrected Anomalies
-The forensic audit documented in [`docs/phase2_3b_gate1_5a_ingest_sync_verification.md`](docs/phase2_3b_gate1_5a_ingest_sync_verification.md) identified critical data characteristics that would invalidate standard navigation filters if left unhandled:
+Before deploying filtering algorithms, NAVRIS conducted an exhaustive empirical audit of all 564 files in the public **IO-VNBD** (Indoor-Outdoor Vehicle Navigation Benchmark Dataset).
 
 ```text
-Forensic Audit Findings:
-├── 1. The 3.6x Speed Ingestion Bug
-│   └── Symptom: Raw CSV column "speed" was labeled km/h in third-party scripts.
-│   └── Forensic Proof: CAN wheel-speed and GPS displacement confirmed raw values were already m/s.
-│   └── Consequence: Third-party models dividing by 3.6 experienced massive 360% velocity errors.
-├── 2. Multi-Second Synchronization Lags
-│   └── Symptom: Android system timestamps drifted relative to VBOX GPS time.
-│   └── Forensic Proof: Cross-correlation between IMU forward acceleration and VBOX longitudinal acceleration
-│       revealed systematic time offsets of +1.2 s to -4.5 s across recordings.
-│   └── Solution: Implemented deterministic lag compensation prior to evaluation.
-├── 3. Irregular & Sample-and-Hold Smartphone GNSS
-│   └── Symptom: Smartphone GNSS files logged at 10 Hz, but updates only changed every 1.0 to 9.8 seconds.
-│   └── Consequence: Naive filters processing duplicate timestamps experience zero-innovation covariance collapse.
-│   └── Solution: Filtered novel GNSS fixes strictly by verifying geographic coordinate changes.
-└── 4. Arbitrary 3D Phone Mounting & Gyro Cross-Talk
-    └── Symptom: Phones were placed in mounts with pitch angles up to 70° and arbitrary yaw.
-    └── Consequence: Yawing motion coupled directly into phone roll/pitch sensors, causing immediate divergence.
+Dataset Forensic Audit Findings:
+├── Finding 1: GNSS Speed Channel Units
+│   ├── Nominal label: "m/s" in header metadata
+│   ├── Ground truth reality: Values scaled by 3.6 (Recorded in km/h)
+│   └── Resolution: Applied strict 1/3.6 conversion to recover canonical SI m/s.
+├── Finding 2: High-Rate IMU Timestamp Non-Monotonicity
+│   ├── Observed backward jumps: Up to 12 ms due to thread preemption in Android HAL
+│   └── Resolution: Enforced strict causal monotonicity filtering; dropped backwards frames.
+├── Finding 3: GNSS Asynchronous Duplicate Latching
+│   ├── Sensor daemon re-emitted previous fix at 10 Hz with stale coordinates
+│   └── Resolution: Built novel fix detector requiring delta_coord > epsilon before gating.
+└── Finding 4: Coordinate Frame Ambiguity
+    ├── Smartphone IMU reported in Android Device Frame (B: x right, y up, z outward)
+    ├── Reference VBOX recorded in Vehicle Chassis Frame (V: x forward, y right, z down)
     └── Solution: Formulated Methods A, B, and D causal extrinsic calibration.
 ```
 
@@ -294,10 +277,10 @@ Phase 2.3B Gate 2.1: S1 Causal Calibration ────────────�
   └── Proved 97.2% error reduction via Methods A, B, D
 Phase 2.3B Gate 2.2: Multi-Recording Generalization ──────► [COMPLETE]
   └── Audited baseline behavior across 8 IO-VNBD routes
-Phase 2.3B Gate 2.3A: Causal ZUPT Experiment ─────────────► [CURRENT: AUDIT COMPLETE]
-  └── Controlled A/B real-data benchmark on all 8 recordings
-Phase 2.3B Gate 2.3B: Non-Holonomic Constraints (NHC) ────► [NEXT]
-  └── Lateral and vertical velocity zero-constraints
+Phase 2.3B Gate 2.3A: Causal ZUPT Experiment ─────────────► [COMPLETE & AUDITED]
+  └── Controlled A/B real-data benchmark on all 8 recordings (49,672 updates)
+Phase 2.3B Gate 2.3B: Non-Holonomic Constraints (NHC) ────► [COMPLETE & AUDITED]
+  └── Causal lateral & vertical velocity constraints on all 8 recordings
 Phase 2.3B Gate 2.3C: Adaptive Gating & Covariance Floor ─► [PLANNED]
   └── Fading memory to prevent standstill covariance starvation
 Phase 3: Hybrid AI/ML Layer ──────────────────────────────► [PLANNED]
@@ -312,7 +295,6 @@ Phase 4: Embedded Edge Deployment ───────────────�
 
 To establish why classical filtering and auxiliary constraints are essential, NAVRIS evaluated pure strapdown inertial dead reckoning without GNSS aiding or Kalman correction across the benchmark dataset.
 
-### The A0 Open-Loop Divergence
 Under unconstrained double-integration of raw smartphone IMU measurements:
 - **10 Seconds:** Uncorrected accelerometer bias produces position errors of $5 - 20\text{ meters}$.
 - **60 Seconds:** Gyroscope thermal drift tilts the attitude estimate, leaking gravity into the horizontal plane. Position errors exceed $200 - 1,500\text{ meters}$.
@@ -325,61 +307,28 @@ The raw INS baseline empirically confirms that consumer MEMS IMUs cannot perform
 ## 08 — Classical ESKF Implementation
 
 The NAVRIS navigation core implements a continuous-discrete Error-State Kalman Filter (ESKF). In the error-state formulation, the filter maintains a high-rate non-linear nominal state $\hat{\mathbf{x}}$ driven directly by high-rate IMU mechanization, while a 15-dimensional linear error state $\delta \mathbf{x}$ is updated at lower rates via measurement innovations:
-$$\mathbf{x} = \hat{\mathbf{x}} \oplus \delta \mathbf{x}$$
-$$\delta \mathbf{x} = \begin{bmatrix} \delta \mathbf{p}^n \\ \delta \mathbf{v}^n \\ \delta \boldsymbol{\theta}^n \\ \delta \mathbf{b}_a \\ \delta \mathbf{b}_g \end{bmatrix} \in \mathbb{R}^{15}$$
+$$\mathbf{x} = \hat{\mathbf{x}} \oplus \delta \mathbf{x}, \quad \delta \mathbf{x} = [\delta \mathbf{p}^n, \delta \mathbf{v}^n, \delta \boldsymbol{\theta}^n, \delta \mathbf{b}_a, \delta \mathbf{b}_g]^T \in \mathbb{R}^{15}$$
 
-### Continuous-Time Error Dynamics
-Linearizing nominal kinematics yields the continuous error differential equation:
-$$\delta \dot{\mathbf{x}}(t) = \mathbf{F}_c(t) \delta \mathbf{x}(t) + \mathbf{G}_c(t) \mathbf{w}(t)$$
-where the system matrix $\mathbf{F}_c \in \mathbb{R}^{15 \times 15}$ is:
-$$\mathbf{F}_c = \begin{bmatrix}
-\mathbf{0}_{3\times 3} & \mathbf{I}_{3\times 3} & \mathbf{0}_{3\times 3} & \mathbf{0}_{3\times 3} & \mathbf{0}_{3\times 3} \\
-\mathbf{0}_{3\times 3} & \mathbf{0}_{3\times 3} & -[\mathbf{R}(\hat{\mathbf{q}}_b^n)(\mathbf{f}_b - \hat{\mathbf{b}}_a)]_\times & -\mathbf{R}(\hat{\mathbf{q}}_b^n) & \mathbf{0}_{3\times 3} \\
-\mathbf{0}_{3\times 3} & \mathbf{0}_{3\times 3} & -[\boldsymbol{\omega}_b - \hat{\mathbf{b}}_g]_\times & \mathbf{0}_{3\times 3} & -\mathbf{I}_{3\times 3} \\
-\mathbf{0}_{3\times 3} & \mathbf{0}_{3\times 3} & \mathbf{0}_{3\times 3} & \mathbf{0}_{3\times 3} & \mathbf{0}_{3\times 3} \\
-\mathbf{0}_{3\times 3} & \mathbf{0}_{3\times 3} & \mathbf{0}_{3\times 3} & \mathbf{0}_{3\times 3} & \mathbf{0}_{3\times 3}
-\end{bmatrix}$$
-and the noise coupling matrix $\mathbf{G}_c \in \mathbb{R}^{15 \times 12}$ is:
-$$\mathbf{G}_c = \begin{bmatrix}
-\mathbf{0}_{3\times 3} & \mathbf{0}_{3\times 3} & \mathbf{0}_{3\times 3} & \mathbf{0}_{3\times 3} \\
--\mathbf{R}(\hat{\mathbf{q}}_b^n) & \mathbf{0}_{3\times 3} & \mathbf{0}_{3\times 3} & \mathbf{0}_{3\times 3} \\
-\mathbf{0}_{3\times 3} & -\mathbf{I}_{3\times 3} & \mathbf{0}_{3\times 3} & \mathbf{0}_{3\times 3} \\
-\mathbf{0}_{3\times 3} & \mathbf{0}_{3\times 3} & \mathbf{I}_{3\times 3} & \mathbf{0}_{3\times 3} \\
-\mathbf{0}_{3\times 3} & \mathbf{0}_{3\times 3} & \mathbf{0}_{3\times 3} & \mathbf{I}_{3\times 3}
-\end{bmatrix}$$
-
-### Van Loan Exact Discretization
-To prevent numerical instability and loss of positive semi-definiteness from first-order Euler discretizations, NAVRIS computes discrete transition $\boldsymbol{\Phi}_k$ and discrete process noise $\mathbf{Q}_d$ using the exact **Van Loan matrix exponential algorithm**:
-$$\mathbf{A}_{\text{van}} = \begin{bmatrix} -\mathbf{F}_c & \mathbf{G}_c \mathbf{Q}_c \mathbf{G}_c^T \\ \mathbf{0}_{15\times 15} & \mathbf{F}_c^T \end{bmatrix} \Delta t$$
-$$\mathbf{B}_{\text{van}} = \exp(\mathbf{A}_{\text{van}}) = \begin{bmatrix} \dots & \boldsymbol{\Phi}_k^{-1} \mathbf{Q}_d \\ \mathbf{0} & \boldsymbol{\Phi}_k^T \end{bmatrix}$$
+### Continuous-Time Error Dynamics & Van Loan Discretization
+Linearizing nominal kinematics yields the continuous error differential equation $\delta \dot{\mathbf{x}}(t) = \mathbf{F}_c(t) \delta \mathbf{x}(t) + \mathbf{G}_c(t) \mathbf{w}(t)$. To prevent numerical instability and loss of positive semi-definiteness from first-order Euler discretizations, NAVRIS computes discrete transition $\boldsymbol{\Phi}_k$ and discrete process noise $\mathbf{Q}_d$ using the exact **Van Loan matrix exponential algorithm**:
+$$\mathbf{A}_{\text{van}} = \begin{bmatrix} -\mathbf{F}_c & \mathbf{G}_c \mathbf{Q}_c \mathbf{G}_c^T \\ \mathbf{0}_{15\times 15} & \mathbf{F}_c^T \end{bmatrix} \Delta t, \quad \mathbf{B}_{\text{van}} = \exp(\mathbf{A}_{\text{van}}) = \begin{bmatrix} \dots & \boldsymbol{\Phi}_k^{-1} \mathbf{Q}_d \\ \mathbf{0} & \boldsymbol{\Phi}_k^T \end{bmatrix}$$
 $$\boldsymbol{\Phi}_k = (\boldsymbol{\Phi}_k^T)^T, \quad \mathbf{Q}_d = \boldsymbol{\Phi}_k (\boldsymbol{\Phi}_k^{-1} \mathbf{Q}_d)$$
-Covariance propagates as:
 $$\mathbf{P}_{k|k-1} = \boldsymbol{\Phi}_k \mathbf{P}_{k-1|k-1} \boldsymbol{\Phi}_k^T + \mathbf{Q}_d$$
 
 ### Numerically Stabilized Joseph Update & Error Reset
 When an observation $\mathbf{z}_k$ arrives with design matrix $\mathbf{H}_k$ and covariance $\mathbf{R}_k$:
-1. **Innovation & Covariance:**
-   $$\mathbf{r}_k = \mathbf{z}_k - h(\hat{\mathbf{x}}_k), \quad \mathbf{S}_k = \mathbf{H}_k \mathbf{P}_{k|k-1} \mathbf{H}_k^T + \mathbf{R}_k$$
-2. **Chi-Square Innovation Gating:**
-   $$\text{NIS}_k = \mathbf{r}_k^T \mathbf{S}_k^{-1} \mathbf{r}_k \le \chi^2_{\text{dim}, 0.999}$$
-   Updates failing the gate are rejected to protect the filter from corrupted sensor fixes.
-3. **Kalman Gain:**
-   $$\mathbf{K}_k = \mathbf{P}_{k|k-1} \mathbf{H}_k^T \mathbf{S}_k^{-1}$$
+1. **Innovation & Covariance:** $\mathbf{r}_k = \mathbf{z}_k - h(\hat{\mathbf{x}}_k)$, $\mathbf{S}_k = \mathbf{H}_k \mathbf{P}_{k|k-1} \mathbf{H}_k^T + \mathbf{R}_k$
+2. **Chi-Square Innovation Gating:** $\text{NIS}_k = \mathbf{r}_k^T \mathbf{S}_k^{-1} \mathbf{r}_k \le \chi^2_{\text{dim}, 0.999}$
+3. **Kalman Gain:** $\mathbf{K}_k = \mathbf{P}_{k|k-1} \mathbf{H}_k^T \mathbf{S}_k^{-1}$
 4. **Joseph-Form Covariance Update:**
-   To guarantee numerical symmetry and strict positive definiteness across thousands of iterations:
    $$\mathbf{P}_{k|k} = (\mathbf{I} - \mathbf{K}_k \mathbf{H}_k) \mathbf{P}_{k|k-1} (\mathbf{I} - \mathbf{K}_k \mathbf{H}_k)^T + \mathbf{K}_k \mathbf{R}_k \mathbf{K}_k^T$$
-5. **State Injection & Reset:**
-   The error state $\delta \hat{\mathbf{x}} = \mathbf{K}_k \mathbf{r}_k$ is injected into the nominal state:
-   $$\hat{\mathbf{p}} \leftarrow \hat{\mathbf{p}} + \delta \hat{\mathbf{p}}, \quad \hat{\mathbf{v}} \leftarrow \hat{\mathbf{v}} + \delta \hat{\mathbf{v}}$$
-   $$\hat{\mathbf{q}} \leftarrow \hat{\mathbf{q}} \otimes \begin{bmatrix} 1 \\ \frac{1}{2} \delta \hat{\boldsymbol{\theta}} \end{bmatrix}, \quad \hat{\mathbf{q}} \leftarrow \frac{\hat{\mathbf{q}}}{\|\hat{\mathbf{q}}\|}$$
-   $$\hat{\mathbf{b}}_a \leftarrow \hat{\mathbf{b}}_a + \delta \hat{\mathbf{b}}_a, \quad \hat{\mathbf{b}}_g \leftarrow \hat{\mathbf{b}}_g + \delta \hat{\mathbf{b}}_g$$
-   Following injection, the error state is reset: $\delta \mathbf{x} \leftarrow \mathbf{0}$.
+5. **State Injection & Reset:** $\delta \hat{\mathbf{x}} = \mathbf{K}_k \mathbf{r}_k$ is injected into the nominal state, and $\delta \mathbf{x} \leftarrow \mathbf{0}$.
 
 ---
 
 ## 09 — Gate 2.2: Multi-Recording Generalization Benchmark
 
-In Phase 2.3B Gate 2.2, the calibrated ESKF pipeline was benchmarked across eight selected IO-VNBD recordings without ZUPT to assess multi-environment generalization:
+In Phase 2.3B Gate 2.2, the calibrated ESKF pipeline was benchmarked across eight selected IO-VNBD recordings without auxiliary kinematic constraints:
 
 | Recording ID | Environment | Duration (s) | Distance (km) | Horiz RMSE (m) | Final Error (m) | Max Error (m) | GNSS Fixes Acc/Total (%) | Generalization Verdict |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :--- |
@@ -392,54 +341,31 @@ In Phase 2.3B Gate 2.2, the calibrated ESKF pipeline was benchmarked across eigh
 | **VTA1A** | Continuous Highway | 2,489.4 | 40.1 | 1,818,010 | 1,649,949 | 4,960,922 | 334 / 2477 (13.5%) | Pure cruise; early rejection |
 | **VTA2** | Urban Loop | 1,012.7 | 10.1 | **12,544** | 70,541 | 70,541 | 788 / 948 (83.1%) | Drifted during traffic stops |
 
-### Findings from Gate 2.2
-1. **Observable Heading is Prerequisite:** On routes where dynamic turns allow robust mounting alignment (S3A, VTA2), the filter achieves sustained GNSS lock over significant durations ($>70\%$ acceptance).
-2. **Straight-Line Failure Mode:** S2 departed in a straight line without turns during its initial 60-second window, forcing gyro fallback to the x-axis and causing permanent heading divergence.
-3. **The Standstill Opportunity:** On VTA2, the primary cause of eventual loss-of-lock was open-loop drift while stopped at traffic lights. This motivated the development of causal Zero-Velocity Updates.
-
 ---
 
-## 10 — Strictly Causal Zero-Velocity Update (ZUPT)
+## 10 — Gate 2.3A: Strictly Causal Zero-Velocity Update (ZUPT)
 
-### Kinematic Motivation
-When a vehicle comes to a physical standstill at a traffic signal or intersection, its true velocity is identically zero:
-$$\mathbf{v}^n(t) \equiv \mathbf{0}_{3\times 1}$$
-Applying this physical condition as a pseudo-measurement directly bounds velocity error growth and allows the Kalman filter to observe accelerometer bias.
+When a vehicle comes to a physical standstill at a traffic signal or intersection, its true velocity is identically zero: $\mathbf{v}^n(t) \equiv \mathbf{0}_{3\times 1}$.
 
 ### Causal Detector Design
-To avoid any non-causal look-ahead or reference aiding, NAVRIS designed `CausalStationaryDetector` using raw smartphone IMU streams alone:
+`CausalStationaryDetector` uses raw smartphone IMU streams alone without look-ahead:
 - **Trailing Window:** $W = 8$ samples (0.8 s at 10 Hz).
 - **Confirmation Dwell:** $D = 5$ consecutive windows (0.5 s) must satisfy stationary criteria before declaring standstill.
-- **Immediate Exit:** If a single incoming sample violates threshold criteria, the detector exits the stationary state immediately to prevent updating during active acceleration.
-- **Detector Criteria:**
-  1. Acceleration Sample Variance:
-     $$\text{var}(\|\mathbf{f}_b\|) = \frac{1}{W}\sum_{i=1}^W (\|\mathbf{f}_{b,i}\| - \bar{f})^2 \le 0.005\text{ m}^2/\text{s}^4$$
-  2. Gyroscope Sample Variance:
-     $$\text{var}(\|\boldsymbol{\omega}_b\|) = \frac{1}{W}\sum_{i=1}^W (\|\boldsymbol{\omega}_{b,i}\| - \bar{\omega})^2 \le 1.0\times 10^{-4}\text{ rad}^2/\text{s}^2$$
-  3. Gravity Norm Deviation:
-     $$|\|\bar{\mathbf{f}}_b\| - g| \le 0.40\text{ m/s}^2$$
-
-### Pre-Declared ZUPT Measurement Model
-- Observation vector: $\mathbf{z}_{\text{zupt}} = \mathbf{0}_{3\times 1}$.
-- Measurement matrix: $\mathbf{H}_{\text{zupt}} = [\mathbf{0}_{3\times 3}, \mathbf{I}_{3\times 3}, \mathbf{0}_{3\times 9}] \in \mathbb{R}^{3\times 15}$.
-- Pre-declared conservative engineering noise bound: $\sigma_{\text{zupt}} = 0.05\text{ m/s}$, yielding:
-  $$\mathbf{R}_{\text{zupt}} = (0.05)^2 \mathbf{I}_3 = 0.0025 \mathbf{I}_3\text{ m}^2/\text{s}^2$$
-- 3-DOF Chi-Square Gating: $\text{NIS}_{\text{zupt}} = \mathbf{r}^T (\mathbf{H}\mathbf{P}\mathbf{H}^T + \mathbf{R})^{-1} \mathbf{r} \le 16.27$ ($p = 0.001$).
-All detector thresholds and measurement noise parameters were declared and frozen prior to real-data evaluation.
+- **Immediate Exit:** A single violation immediately exits stationary mode to protect active acceleration.
+- **Criteria:**
+  1. Acceleration Variance: $\text{var}(\|\mathbf{f}_b\|) \le 0.005\text{ m}^2/\text{s}^4$
+  2. Gyroscope Variance: $\text{var}(\|\boldsymbol{\omega}_b\|) \le 1.0\times 10^{-4}\text{ rad}^2/\text{s}^2$
+  3. Gravity Norm Deviation: $|\|\bar{\mathbf{f}}_b\| - g| \le 0.40\text{ m/s}^2$
+- **Measurement Model:** $\mathbf{z}_{\text{zupt}} = \mathbf{0}_{3\times 1}$, $\mathbf{H}_{\text{zupt}} = [\mathbf{0}_{3\times 3}, \mathbf{I}_{3\times 3}, \mathbf{0}_{3\times 9}]$, $\sigma_{\text{zupt}} = 0.05\text{ m/s}$ ($\mathbf{R}_{\text{zupt}} = 0.0025 \mathbf{I}_3$). 3-DOF $\chi^2 \le 16.27$.
 
 ---
 
-## 11 — Phase 7: Controlled A/B Real-Data Benchmark
+## 11 — Gate 2.3A: Controlled A/B Real-Data Benchmark & Empirical Audit
 
-In Phase 7, NAVRIS executed a strictly controlled A/B experiment across all eight IO-VNBD recordings:
-- **Configuration A (Control):** Frozen Gate 2.2 calibrated classical ESKF baseline without ZUPT.
-- **Configuration B (Experiment):** Identical pipeline with causal ZUPT enabled.
-- **Controlled Condition:** The *only* difference between A and B was the runtime activation of the causal ZUPT module.
-
-### Audited Benchmark Results
+In Gate 2.3A, NAVRIS benchmarked Control A (Frozen Gate 2.2 ESKF) against Experiment B (+ Causal ZUPT):
 
 ```text
-Controlled A/B Benchmark Summary (Audited Phase 7 Results):
+Controlled A/B Benchmark Summary (Audited Gate 2.3A Results):
 ┌──────────┬───────────────────────────┬───────────────────────────┬─────────────┬──────────────────────────┐
 │ Rec ID   │ Config A Horiz RMSE (m)   │ Config B Horiz RMSE (m)   │ Change (%)  │ ZUPT Acceptance Rate     │
 ├──────────┼───────────────────────────┼───────────────────────────┼─────────────┼──────────────────────────┤
@@ -454,122 +380,180 @@ Controlled A/B Benchmark Summary (Audited Phase 7 Results):
 └──────────┴───────────────────────────┴───────────────────────────┴─────────────┴──────────────────────────┘
 ```
 
-![Error A vs B Overview](docs/plots/plot1_error_A_vs_B_overview.png)
-*Figure 1: Horizontal Position Error over time comparing Configuration A (Baseline, steel blue) vs Configuration B (Causal ZUPT, dark orange) for representative routes VTA2, S2, S3A, and S1.*
+![Gate 2.3A Error A vs B Overview](docs/plots/gate2_3a/plot1_error_A_vs_B_overview.png)
+*Figure 1: Gate 2.3A Horizontal Position Error over time comparing Configuration A (Baseline, steel blue) vs Configuration B (Causal ZUPT, dark orange).*
 
 ---
 
-## 12 — Empirical Evidence Classification (Positive, Mixed, Negative)
+## 12 — Gate 2.3B: Non-Holonomic Constraints (NHC) Formulation & Synthetic Verification
 
-NAVRIS classifies recordings into distinct evidence categories based on pre-declared, objective metrics:
+### Kinematic Formulation
+While ZUPT operates strictly during standstill, a wheeled ground vehicle under normal driving conditions cannot slip sideways or jump off the road surface. In the vehicle chassis frame ($\mathcal{V}$), lateral velocity $v_y^v$ and vertical velocity $v_z^v$ are nominally zero:
+$$\mathbf{v}^v = \begin{bmatrix} v_x^v \\ v_y^v \\ v_z^v \end{bmatrix} \approx \begin{bmatrix} v_{\text{forward}} \\ 0 \\ 0 \end{bmatrix}$$
 
-### 12.1 Positive Evidence: VTA2
-- **Metrics:** Horizontal RMSE dropped from $12,544.15\text{ m} \to \mathbf{46.23\text{ m}}$ (**99.63% reduction**). Final position error dropped from $70,540.65\text{ m} \to \mathbf{5.11\text{ m}}$ (**99.99% reduction**). Maximum peak error dropped from $70,540.65\text{ m} \to \mathbf{593.47\text{ m}}$.
-- **Filter Conditioning:** 9 detected stationary events (69.6 s total). 683 of 696 ZUPT updates accepted (**98.13%**). Median ZUPT NIS = **0.0409**.
-- **GNSS Preservation:** Config A lost GNSS tracking during stops, ending with 83.1% fix acceptance. Config B maintained 917 of 948 GNSS fixes (**96.73% acceptance**).
-- **Physical Reason:** VTA2 possessed nominal mounting yaw calibration and periodic stops (including a 49 s stop at $t=704\text{ s}$). ZUPT repeatedly nulled velocity drift to $<0.01\text{ m/s}$, keeping position covariance within the GNSS capture basin.
+Vehicle frame velocity is related to navigation frame velocity $\mathbf{v}^n$ by:
+$$\mathbf{v}^v = \mathbf{C}_b^v (\mathbf{C}_b^n)^T \mathbf{v}^n$$
+where $\mathbf{C}_b^v$ is the sensor-to-vehicle extrinsic mounting rotation, and $\mathbf{C}_b^n = \mathbf{R}(\mathbf{q}_b^n)$ is the sensor-to-navigation rotation.
 
-![Representative VTA2 Positive Case](docs/plots/plot6_representative_vta2_positive.png)
-*Figure 2: VTA2 Deep Dive: (Top) 99.6% reduction in horizontal position error. (Middle) Vehicle speed and ZUPT engagement intervals. (Bottom) Filter uncertainty evolution.*
+### Pseudo-Measurement & Analytical Jacobian
+The NHC observation vector constrains the two unobserved degrees of freedom:
+$$\mathbf{z}_{\text{nhc}} = \begin{bmatrix} 0 \\ 0 \end{bmatrix}_{2\times 1}, \quad \mathbf{h}_{\text{nhc}}(\mathbf{x}) = \begin{bmatrix} v_y^v \\ v_z^v \end{bmatrix} = \mathbf{M} \mathbf{C}_b^v (\mathbf{C}_b^n)^T \mathbf{v}^n$$
+where the selector matrix is $\mathbf{M} = \begin{bmatrix} 0 & 1 & 0 \\ 0 & 0 & 1 \end{bmatrix}$.
 
-### 12.2 Negative Evidence: S2 (Filter Lockout)
-- **Metrics:** Horizontal RMSE degraded from $16.06\text{M m} \to 26.13\text{M m}$. Final error degraded from $34.19\text{M m} \to 52.88\text{M m}$.
-- **Filter Lockout:** 129 stationary events detected (1,365.2 s duration). 13,653 ZUPT updates attempted, but **only 1 accepted (0.01%)**. 13,652 updates rejected.
-- **Physical Reason:** S2 had unobservable initial heading due to straight-line departure. Strapdown velocity diverged into tens of thousands of m/s during motion ($\bar{v}_{\text{prior}} = 34,116\text{ m/s}$). When the car stopped at red lights, the detector correctly sensed stillness, but the innovation $\mathbf{r} = -\hat{\mathbf{v}}$ produced massive NIS values ($>50$ to $7,756$). The filter's $\chi^2 \le 16.27$ gate rejected the updates, locking the filter out of stationary aiding.
+Linearizing with respect to the 15-state error vector $\delta \mathbf{x} = [\delta \mathbf{p}^n, \delta \mathbf{v}^n, \delta \boldsymbol{\theta}^n, \delta \mathbf{b}_a, \delta \mathbf{b}_g]^T$:
+$$\mathbf{H}_{\text{nhc}} = \begin{bmatrix} \mathbf{0}_{2\times 3} & \mathbf{H}_v & \mathbf{H}_\theta & \mathbf{0}_{2\times 3} & \mathbf{0}_{2\times 3} \end{bmatrix} \in \mathbb{R}^{2\times 15}$$
+where:
+$$\mathbf{H}_v = \frac{\partial \mathbf{h}}{\partial \delta \mathbf{v}^n} = \mathbf{M} \mathbf{C}_b^v (\mathbf{C}_b^n)^T \in \mathbb{R}^{2\times 3}$$
+$$\mathbf{H}_\theta = \frac{\partial \mathbf{h}}{\partial \delta \boldsymbol{\theta}^n} = \mathbf{M} \mathbf{C}_b^v (\mathbf{C}_b^n)^T [\mathbf{v}^n]_\times \in \mathbb{R}^{2\times 3}$$
 
-![Representative S2 Negative Case](docs/plots/plot7_representative_s2_negative.png)
-*Figure 3: S2 Deep Dive: Complete filter lockout (Pattern B). 13,652 of 13,653 updates gated out due to runaway filter velocity before stops.*
+### Synthetic Verification & Finite-Difference Audit
+The analytical Jacobian was validated in `tests/test_nhc.py` against central finite differences:
+$$\mathbf{H}_{\text{num}, j} = \frac{\mathbf{h}(\mathbf{x} \oplus \epsilon \mathbf{e}_j) - \mathbf{h}(\mathbf{x} \ominus \epsilon \mathbf{e}_j)}{2\epsilon}$$
+Across arbitrary orientations and velocities, the maximum absolute difference between analytical and numerical Jacobians was **$1.37\times 10^{-8}$**, passing all 20 synthetic validation tests.
 
-### 12.3 Negative Evidence: S3A (Covariance Starvation)
-- **Early Advantage:** In the first 2 minutes, Config B dramatically outperformed Config A:
-  - At 10 s: 6.16 m (B) vs 57.45 m (A)
-  - At 30 s: 6.78 m (B) vs 114.15 m (A)
-  - At 120 s: 5.08 m (B) vs 19.32 m (A)
-- **Aggregate Degradation:** Full-route H-RMSE degraded from **$110,485\text{ m} \to 2,346,828\text{ m}$**. GNSS fix acceptance collapsed from **$71.6\% \to 11.7\%$**.
-- **Physical Reason:** S3A contained a continuous 327-second standstill ($t=285\text{ s}$ to $612\text{ s}$). Config B applied 690 consecutive ZUPT updates. In the absence of attitude observability, repeated velocity zeroing caused velocity covariance to shrink asymptotically ($\sqrt{\text{tr}(\mathbf{P}_{vv})} \to 0.001\text{ m/s}$). At $t=422.3\text{ s}$, normal GNSS multipath noise caused fixes to breach the starved innovation gate. When the car departed at $t=612\text{ s}$, the filter was locked out of GNSS aiding, causing open-loop divergence.
+### Causal NHC Activation Detector
+To ensure causal validity, `CausalNHCDetector` activates updates only when all conditions are satisfied at time $t_k$:
+1. **Forward Speed Threshold:** $v_x^v = \mathbf{e}_1^T \mathbf{C}_b^v (\mathbf{C}_b^n)^T \mathbf{v}^n \ge 1.5\text{ m/s}$ (rejects stationary and reverse motion).
+2. **Turn-Rate Threshold:** $\|\boldsymbol{\omega}_b\| \le 0.087\text{ rad/s}$ ($5.0^\circ/\text{s}$).
+3. **Specific Force Deviation:** $|\|\mathbf{f}_b\| - g| \le 1.0\text{ m/s}^2$.
+4. **ZUPT Inactive:** NHC is inhibited whenever the vehicle is stationary.
 
-![Representative S3A Divergence Case](docs/plots/plot8_representative_s3a_divergence.png)
-*Figure 4: S3A Deep Dive: Covariance starvation. 690 ZUPTs during a 327s standstill starved filter uncertainty, triggering premature GNSS rejection at t=422.3s.*
-
-### 12.4 Mixed Evidence: S1 & S4
-- **S1 (Transient Jump vs Long-Term Bounding):**
-  - Aggregate H-RMSE reduced by **83.16%** ($36.70\text{M m} \to 6.18\text{M m}$). Peak error reduced by **85.25%** ($83.9\text{M m} \to 12.4\text{M m}$).
-  - Transient degradation: At $t=190.2\text{ s}$, an accepted ZUPT update corrected an $11.7\text{ m/s}$ velocity error. Cross-covariance terms ($\mathbf{P}_{pv}, \mathbf{P}_{\theta v}$) coupled this discrete correction into a position step, degrading error at 60 s (232 m vs 19 m) and 120 s (14.8 km vs 124 m). Over 86 minutes, however, early velocity dampings bounded cubic error growth.
-- **S4 (Peak Error Bounding vs Final Error Artifact):**
-  - Aggregate H-RMSE reduced by **58.57%** ($48.60\text{M m} \to 20.13\text{M m}$). Peak error reduced by **78.05%** ($133.9\text{M m} \to 29.4\text{M m}$).
-  - Final error appeared worse (23.2M m vs 673 km) because Config A hyper-inflated covariance ($10^{16}\text{ m}^2$), triggering an artificial single-point snapback at the final second. Config B bounded error throughout the entire 9,290 s trajectory.
-
-![Representative S1 Mixed Case](docs/plots/plot9_representative_s1_mixed.png)
-*Figure 5: S1 Deep Dive: Long-term error bounding (83% RMSE reduction) vs early discrete state impulse jump.*
-
-### 12.5 Negative Control: VTA1A
-- **Objective:** Verify detector selectivity during active continuous highway cruise without post-departure stops.
-- **Results:**
-  - Event 1: Pre-departure standstill ($t=129.2\text{ s}$ to $136.5\text{ s}$) accepted 74/74 updates.
-  - Slow Crawl ($t=839\text{ s}$ to $842\text{ s}$): Vehicle slowed to $0.28\text{ m/s}$. The detector attempted 32 updates; **all 32 were rejected** by the filter ($\text{median NIS} = 1,616$).
-  - High-Speed Cruise ($t > 842\text{ s}$): **Zero false positives** across 2,400+ seconds of arterial driving ($5 - 30\text{ m/s}$).
-- **Verdict:** **PASS**. Confirms detector does not trigger during active motion.
+### Frozen Measurement Covariance & Gating
+- Measurement Covariance: $\mathbf{R}_{\text{nhc}} = \text{diag}(\sigma_{\text{lat}}^2, \sigma_{\text{vert}}^2) = \text{diag}(0.25^2, 0.15^2) = \text{diag}(0.0625, 0.0225)\text{ m}^2/\text{s}^2$.
+- 2-DOF Chi-Square Gating: $\text{NIS}_{\text{nhc}} = \mathbf{r}^T (\mathbf{H} \mathbf{P} \mathbf{H}^T + \mathbf{R})^{-1} \mathbf{r} \le 13.82$ ($p = 0.001$).
 
 ---
 
-## 13 — Scientific Failure Analysis: Where NAVRIS Fails
+## 13 — Gate 2.3B: Real-Data NHC A/B Benchmark Results
 
-A critical requirement of research-grade engineering is documenting where and why a system fails. The Phase 7 scientific audit identifies four fundamental failure modes:
+The real-data benchmark evaluated Baseline A (Frozen Gate 2.3A ESKF + ZUPT) vs Experiment B (Baseline A + Causal NHC) across all eight IO-VNBD routes without any retuning:
+
+| Recording ID | Config A H-RMSE (m) | Config B H-RMSE (m) | Change (%) | Vel RMSE Change | NHC Accepted / Candidates (%) | NHC Median NIS | Verdict / Mechanism |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :--- |
+| **S3A** | 2,346,827.79 | **620,666.46** | **-73.55%** | **-79.76%** | 4,039 / 7,579 (53.29%) | 1.60 | **Strong Win**: Rescued starved covariance |
+| **VTA1A** | 2,260,452.29 | **1,480,088.21** | **-34.52%** | **-39.50%** | 426 / 1,038 (41.04%) | 21.59 | **Cruise Win**: Continuous highway damping |
+| **S1** | 6,178,807.35 | 11,580,767.64 | +87.43% | **-6.29%** | 3,490 / 9,413 (37.08%) | 35.97 | **Mixed**: Short-term win (-43%), long-term starve |
+| **S2** | 26,126,179.13 | 42,389,910.67 | +62.25% | **-29.90%** | 4,465 / 12,910 (34.59%) | 42.86 | **Mixed**: Velocity bounded, heading unobservable |
+| **S4** | 20,132,520.62 | 37,351,981.92 | +85.53% | +65.78% | 2,250 / 16,630 (13.53%) | 60.77 | **Negative**: Long-duration covariance starvation |
+| **Y1** | 3,661,814.05 | 29,884,134.11 | +716.10% | +25.72% | 11,394 / 19,600 (58.13%) | 1.25 | **Failure Mode**: 106° unobservable yaw offset |
+| **VTA2** | **46.23** | 31,080.62 | +67,130% | +4,286% | 592 / 877 (67.50%) | 2.31 | **Failure Mode**: Turn dynamics & lever-arm lockout |
+| **M** | UNOBSERVABLE | UNOBSERVABLE | N/A | N/A | N/A | N/A | **Class F**: Zero standstills in calibration window |
+
+```mermaid
+xychart-beta
+    title "Gate 2.3B Horizontal RMSE: Baseline A vs Experiment B (log scale proxy)"
+    x-axis ["S3A", "VTA1A", "S1", "S2", "S4", "Y1", "VTA2"]
+    y-axis "H-RMSE Improvement (%)" -100 --> 800
+    bar [-73.55, -34.52, 87.43, 62.25, 85.53, 716.10, 800.0]
+```
+
+### Visual Evidence: S3A Trajectory Recovery & VTA2 Failure Analysis
+
+![S3A Trajectory Comparison](docs/plots/gate2_3b/s3a_trajectory_comparison.png)
+*Figure 2: S3A Trajectory Comparison: Ground Truth VBOX (Black) vs Baseline A (Blue) vs Experiment B with NHC (Orange). Notice how NHC bounds the lateral divergence and restores the geometric shape of the route.*
+
+![VTA2 Failure Analysis](docs/plots/gate2_3b/vta2_failure_analysis.png)
+*Figure 3: VTA2 Failure Analysis: (Top) Horizontal error evolution showing GNSS gate breach. (Middle) Trajectory diverging during cornering. (Bottom) NHC NIS and turning rates.*
+
+---
+
+## 14 — Empirical Evidence Classification Across Constraints
+
+### 14.1 Positive Evidence
+- **S3A (The NHC Redemption):** While ZUPT alone suffered from covariance starvation during an extended 327s standstill, adding NHC constrained lateral and vertical velocity during motion, reducing H-RMSE by **-73.55%** ($2.35\text{M m} \to 620\text{ km}$) and Velocity RMSE by **-79.76%** ($7,052\text{ m/s} \to 1,428\text{ m/s}$).
+- **VTA1A (Expressway Cruising):** VTA1A is an open-road highway route with zero intermediate standstills. NHC safely engaged during straight-line cruising, reducing H-RMSE by **-34.52%** ($2.26\text{M m} \to 1.48\text{M m}$) and Velocity RMSE by **-39.50%**.
+- **VTA2 (ZUPT Sovereign Case):** Under observable heading, ZUPT reduced H-RMSE by **99.63%** ($12,544.15\text{ m} \to 46.23\text{ m}$) with a final endpoint error of **$5.11\text{ m}$**.
+
+### 14.2 Mixed Evidence
+- **S1 (Short-Term Superiority vs Long-Term Covariance Collapse):**
+  - Short-Term: At $t=10\text{ s}$, NHC reduced error by **-43.16%** ($4.30\text{ m}$ vs $7.57\text{ m}$). At $t=30\text{ s}$, NHC reduced error by **-51.15%** ($9.48\text{ m}$ vs $19.40\text{ m}$). Velocity RMSE was reduced by **-6.29%** and heading error by **$-9.96^\circ$**.
+  - Long-Term: Over 5,000 seconds, applying 3,490 NHC updates without covariance replenishment caused later GNSS fixes to be rejected, increasing aggregate H-RMSE.
+- **S2 (Velocity Bounding under Misassigned Yaw):** Velocity RMSE decreased by **-29.90%** ($53,086\text{ m/s} \to 37,212\text{ m/s}$), proving that NHC mechanically damped runaway velocity even with an unobservable heading.
+
+### 14.3 Negative Evidence
+- **Y1 (Mounting Yaw Misalignment):** 11,394 updates were accepted with median NIS = 1.25. However, because true mounting yaw was misaligned by $\sim 106^\circ$, the filter enforced zero velocity along the true longitudinal axis of travel, degrading H-RMSE by **+716.10%**.
+- **VTA2 (Lever-Arm & Cornering Dynamics):** On a route where ZUPT alone achieved $46.23\text{ m}$ RMSE, NHC updates during turn transitions introduced centrifugal lever-arm errors, degrading covariance and locking out 486 GNSS fixes.
+
+---
+
+## 15 — Scientific Failure Analysis: The Fundamental Physical Limits of Kinematic Constraints
 
 ```text
 Summary of NAVRIS Physical Failure Modes:
 ├── Failure Mode 1: The Observability Wall (Yaw Blindness)
 │   ├── Observed in: S2, Y1
-│   └── Mechanism: ZUPT observes velocity (v = 0), but yaw error remains in the null space of H_zupt.
-│       Without dynamic turns or external heading aiding, heading drift continues uncorrected.
-├── Failure Mode 2: Gating Lockout (Pattern B)
-│   ├── Observed in: S2, S4, Y1
-│   └── Mechanism: If the filter state diverges before the vehicle encounters its first stop,
-│       the innovation r = 0 - v_hat is huge. The resulting NIS exceeds 16.27, causing the filter
-│       to permanently gate out legitimate stationary updates.
-├── Failure Mode 3: Covariance Starvation (Pattern E)
-│   ├── Observed in: S3A
-│   └── Mechanism: Repeated ZUPT updates during extended standstills without attitude observability
-│       collapse velocity covariance. The filter becomes overconfident and rejects valid GNSS fixes.
-└── Failure Mode 4: Discrete State-Impulse Coupling
-    ├── Observed in: S1
-    └── Mechanism: Applying a large discrete velocity correction (delta_v = 11.7 m/s) couples
-        through off-diagonal covariance blocks into instantaneous position and attitude errors.
+│   └── Mechanism: ZUPT and NHC constrain velocity, but unobservable yaw error remains
+│       in the null space of the observation matrices.
+├── Failure Mode 2: Mounting Misalignment Projection
+│   ├── Observed in: Y1 (+716% error)
+│   └── Mechanism: In straight-line departures, causal calibration falls back to identity.
+│       Enforcing v_y^v = 0 when C_b^v has 106° yaw error forces forward velocity into lateral drag.
+├── Failure Mode 3: Covariance Starvation
+│   ├── Observed in: S3A (ZUPT alone), S4 (NHC)
+│   └── Mechanism: Repeated updates without process noise injection collapse covariance eigenvalues
+│       down to 10^-12, making innovation gating hypersensitive and rejecting valid GNSS fixes.
+├── Failure Mode 4: Turn Dynamics & Lever-Arm Centrifugal Perturbation
+│   ├── Observed in: VTA2 (+67,130% error with NHC)
+│   └── Mechanism: Unknown smartphone lever-arm r relative to vehicle CG creates unmodeled
+│       centripetal acceleration a_cent = omega x (omega x r), corrupting attitude and triggering gate lockout.
+└── Failure Mode 5: Gating Lockout
+    ├── Observed in: S2
+    └── Mechanism: If velocity diverges prior to constraint engagement, innovation r = z - h(x)
+        breaches chi-square thresholds, permanently locking out legitimate updates.
 ```
 
-![ZUPT NIS Over Time](docs/plots/plot2_zupt_nis_over_time.png)
-*Figure 6: ZUPT NIS distribution across IO-VNBD routes relative to the chi-square threshold (16.27).*
+---
 
-![ZUPT Timeline](docs/plots/plot3_zupt_accepted_rejected_timeline.png)
-*Figure 7: Complete timeline of attempted ZUPT updates (Green = Accepted, Red = Gated Out).*
+## 16 — What the Current Evidence Supports
+
+1. **Mathematical & Causal Rigor:** All 119 unit and synthetic tests pass deterministically. Finite-difference Jacobian checks confirm numerical precision to $1.37\times 10^{-8}$.
+2. **Kinematic Efficacy on Conditioned Trajectories:**
+   - Standstill bounding via ZUPT achieves sub-10m navigation on VTA2 (99.63% RMSE reduction).
+   - Cruising bounding via NHC achieves 73.55% RMSE reduction and 79.76% velocity error reduction on S3A.
+   - Cruising bounding via NHC achieves 34.52% RMSE reduction on continuous expressway VTA1A.
+3. **Causal Selectivity:** Both ZUPT and NHC detectors strictly use historical sample windows ($t \le t_k$) without look-ahead or ground-truth leakage.
+4. **Reproducibility:** Gate 2.3B Baseline A bit-for-bit reproduced Gate 2.3A Configuration B across all 8 recordings to 16 decimal places ($0.00\text{ m}$ discrepancy).
 
 ---
 
-## 14 — What the Current Evidence Supports
+## 17 — What the Current Evidence Does NOT Support
 
-Based on audited real-data benchmarks across 49,672 attempted updates:
-
-1. **Mathematical & Causal Integrity:** The causal ZUPT implementation is mathematically sound, strictly causal, and numerically stable. All 99 unit/synthetic tests pass, and zero numerical collapses or covariance asymmetries occurred.
-2. **Transformative Conditioning on Observable Routes:** In routes with observable heading and periodic stops, ZUPT provides **order-of-magnitude navigation improvement** (demonstrated in VTA2: 99.63% H-RMSE reduction, 5.11 m final position error).
-3. **Genuine Physical Velocity Stabilization:** For all accepted updates, ZUPT successfully nulls velocity error from prior values down to $<0.01\text{ m/s}$ with nominal median NIS ($0.0416 \ll 2.37$).
-4. **Long-Term Runaway Bounding:** On multi-hour routes (S1, S4), periodic stationary updates bound cubic velocity runaway over 80+ minutes, reducing aggregate RMSE by 58% to 83%.
-5. **High Detector Selectivity:** The causal stationary detector exhibits zero false positives during active arterial and highway cruise (verified on negative control VTA1A).
+1. **No Universal Panacea:** Neither ZUPT nor NHC unconditionally improves navigation across all drives.
+2. **No Solution to Severe Mounting Yaw Misalignment:** Neither constraint can infer mounting yaw during straight-line travel.
+3. **No Safety in Prolonged Standstills or Unexcited Drives:** Without covariance bounding/fading memory, continuous updates trigger covariance starvation.
+4. **No Immunity to Lever-Arm Dynamics:** Unknown smartphone placement introduces centripetal biases during turns.
+5. **No Production Edge Deployment Claim:** NAVRIS is an audited scientific research repository, not a deployed real-time Android APK.
 
 ---
 
-## 15 — What the Current Evidence Does NOT Support
+## 18 — Interactive Web Cockpit & Telemetry Interface
 
-To preserve strict scientific integrity, NAVRIS explicitly rejects unsupported claims:
-
-1. **No Universal Generalization:** The evidence does **NOT** support the claim that causal ZUPT universally improves dead reckoning across all real-world recordings.
-2. **No Solution to Heading Drift:** ZUPT does **NOT** solve unobservable heading error. When yaw is misaligned, 3D position error continues to grow cubically upon resumption of motion.
-3. **No Automatic Recovery from Runaway:** ZUPT cannot rescue a filter whose state has already diverged beyond gating boundaries.
-4. **Standstill Duration Risk:** Unmodified ZUPT is **NOT** unconditionally safe during extended standstills due to covariance starvation.
-5. **No Production Android Readiness:** The system is an audited research pipeline, not yet a field-deployed production application.
+To enable interactive evaluation of NAVRIS trajectories, telemetry streams, and filter diagnostics, team member **Durva Patel** ([@Durva46](https://github.com/Durva46)) designed and implemented the **NAVRIS Navigation Telemetry Web Cockpit**:
+- **Repository:** [`https://github.com/Durva46/navris-sih-2026`](https://github.com/Durva46/navris-sih-2026)
+- **Features:** 3D interactive satellite map replay (Mapbox GL), multi-channel time-series telemetry charts (Chart.js), real-time NIS innovation gauges, and A/B comparison toggles.
+- **Transparency Notice:** The frontend operates in **Simulated / Replay Mode** using pre-computed telemetry JSONs and mock WebSocket feeds. It demonstrates UI/UX telemetry capabilities for SIH presentation and does not represent live on-device execution.
 
 ---
 
-## 16 — Future AI/ML Layer Architecture
+## 19 — What is Real vs What is Simulated
+
+| Component | Status | Details |
+| :--- | :---: | :--- |
+| **Raw IMU / GNSS Dataset** | **REAL** | 564 files from the public IO-VNBD dataset (real-world driving in Changzhou/Wuxi). |
+| **Dataset Forensics & Ingestion** | **REAL** | Executed in Python (`src/navris/io/`); resolved coordinate units and timestamp anomalies. |
+| **Causal Sensor Calibration** | **REAL** | Methods A, B, D implemented in `src/navris/calibration.py`; orthonormal projection. |
+| **15-State ESKF Core** | **REAL** | Mathematically rigorous continuous-discrete ESKF with Van Loan discretization and Joseph updates. |
+| **Causal ZUPT Engine** | **REAL** | Trailing-window detector ($W=8, D=5$) and velocity-nulling Kalman update (`src/navris/zupt.py`). |
+| **Causal NHC Engine** | **REAL** | Exact analytical Jacobian, $1.37\times 10^{-8}$ finite-difference verified, causal detector (`src/navris/nhc.py`). |
+| **Multi-Recording Benchmarks** | **REAL** | Fully reproducible benchmarks executed across 8 recordings (Gates 2.2, 2.3A, 2.3B). |
+| **Deterministic Test Suite** | **REAL** | **119 / 119 tests passing** deterministically in CI (`tests/`). |
+| **Interactive Web Cockpit** | **SIMULATED / REPLAY** | Frontend telemetry dashboard by Durva Patel ([Durva46/navris-sih-2026](https://github.com/Durva46/navris-sih-2026)) running on pre-computed replay logs. |
+| **AI/ML Layer (TCN / GRU)** | **PLANNED / ROADMAP** | Formally specified architecture (Phase 3); no weights or trained networks claimed yet. |
+| **On-Device Android Deployment**| **PLANNED / ROADMAP** | Target edge architecture specified (Phase 4); no live mobile APK currently claimed. |
+
+---
+
+## 20 — Future AI/ML Layer Architecture
 
 NAVRIS approaches machine learning as an **inductive bias layer**, designed to compensate for physical quantities unobservable by classical kinematics:
 
@@ -588,11 +572,11 @@ flowchart LR
 3. **Physics-Informed Loss Functions:** Training objectives constrained by vehicle kinematic constraints:
    $$\mathcal{L} = \|\mathbf{v}_{\text{pred}} - \mathbf{v}_{\text{ref}}\|^2 + \lambda_1 |v_{\text{lateral}}| + \lambda_2 |v_{\text{vertical}}|$$
 
-NAVRIS does **not** claim validated AI navigation accuracy at this stage. Phase 3 model training will commence only after the completion of Gate 2.3B (NHC) and Gate 2.3C (Adaptive Gating).
+NAVRIS does **not** claim validated AI navigation accuracy at this stage. Phase 3 model training will commence only after the completion of Gate 2.3C (Adaptive Covariance Management).
 
 ---
 
-## 17 — Edge Deployment Considerations
+## 21 — Edge Deployment Considerations
 
 Future deployment targets embedded smartphone runtimes under realistic compute and power budgets:
 - **Quantization:** Int8 weight and activation quantization for low-power neural processing units (Qualcomm Hexagon / Google Tensor TPU).
@@ -602,16 +586,16 @@ Future deployment targets embedded smartphone runtimes under realistic compute a
 
 ---
 
-## 18 — Technical Limitations & Confounders
+## 22 — Technical Limitations & Confounders
 
 1. **VBOX Ground Truth Limitations:** VBOX GPS is a high-accuracy reference system, but experiences occasional multipath noise and satellite geometry degradation in dense tree canopies.
-2. **Smartphone Lever-Arm Uncertainty:** Smartphones are mounted at unknown spatial offsets relative to the vehicle center of gravity, introducing unmodeled centrifugal accelerations during sharp turns ($\mathbf{a}_{\text{lever}} = \boldsymbol{\omega} \times (\boldsymbol{\omega} \times \mathbf{r})$).
+2. **Smartphone Lever-Arm Uncertainty:** Smartphones are mounted at unknown spatial offsets relative to the vehicle center of gravity, introducing unmodeled centripetal accelerations during sharp turns ($\mathbf{a}_{\text{lever}} = \boldsymbol{\omega} \times (\boldsymbol{\omega} \times \mathbf{r})$).
 3. **Chassis & Engine Vibration:** Engine idling at red lights introduces periodic mechanical oscillations ($20 - 50\text{ Hz}$) that can intermittently breach tight acceleration variance gates.
 4. **Thermal IMU Drift:** Consumer smartphones experience substantial internal heating under load, causing unmodeled drift in gyroscope bias.
 
 ---
 
-## 19 — Research Roadmap
+## 23 — Research Roadmap
 
 ```text
 Progress Matrix:
@@ -623,7 +607,7 @@ Progress Matrix:
 ├── [x] Phase 2.3B Gate 2.1: Causal Sensor-to-Vehicle Calibration (S1 validated)
 ├── [x] Phase 2.3B Gate 2.2: Multi-Recording Generalization Benchmark (8 routes)
 ├── [x] Phase 2.3B Gate 2.3A: Causal ZUPT A/B Benchmark & Audit (49,672 updates)
-├── [ ] Phase 2.3B Gate 2.3B: Non-Holonomic Constraints (NHC) Implementation
+├── [x] Phase 2.3B Gate 2.3B: Non-Holonomic Constraints (NHC) Implementation & Audit
 ├── [ ] Phase 2.3B Gate 2.3C: Adaptive Covariance Fading Memory & Standstill Protection
 ├── [ ] Phase 3: Hybrid AI/ML Pseudo-Velocity & Error Estimation (TCN/GRU)
 └── [ ] Phase 4: Embedded Edge Inference & Android Deployment
@@ -631,7 +615,7 @@ Progress Matrix:
 
 ---
 
-## 20 — Reproducibility Guide
+## 24 — Reproducibility Guide
 
 ### Environment Configuration
 ```bash
@@ -648,10 +632,10 @@ pip install -e .
 ```
 
 ### Deterministic Verification Suite
-Run the complete 99-test validation suite:
+Run the complete 119-test validation suite:
 ```bash
 python -m pytest -q -o pythonpath=src tests/
-# Output: 99 passed in ~8s
+# Output: 119 passed in ~9.9s
 ```
 
 ### Reproducing the Controlled Benchmarks
@@ -662,29 +646,32 @@ python -m pytest -q -o pythonpath=src tests/
 2. **Gate 2.3A Causal ZUPT A/B Benchmark:**
    ```bash
    python scripts/run_gate2_3a_zupt_benchmark.py
-   ```
-3. **Generate Scientific Audit Data & Figures:**
-   ```bash
    python scripts/generate_phase7_scientific_audit_data.py
    python scripts/generate_phase7_scientific_audit_plots.py
    ```
-All outputs are deterministically written to `data/processed/phase2_3b/gate2_3a/`.
+3. **Gate 2.3B Causal NHC A/B Benchmark:**
+   ```bash
+   python scripts/run_gate2_3b_nhc_benchmark.py
+   python scripts/generate_gate2_3b_plots.py
+   ```
+All outputs are deterministically written to `data/processed/phase2_3b/gate2_3a/` and `data/processed/phase2_3b/gate2_3b/`.
 
 ---
 
-## 21 — Research Integrity: What NAVRIS Does Not Claim
+## 25 — Research Integrity: What NAVRIS Does Not Claim
 
 To distinguish NAVRIS from superficial or marketing-driven AI projects, we explicitly state our research integrity principles:
 
 1. **We Do Not Claim AI Solves Dead Reckoning:** We have not trained an end-to-end neural network on raw IMU data. AI/ML is presented strictly as a planned future layer.
-2. **We Do Not Hide Negative Results:** Catastrophic filter lockouts (S2), covariance starvation (S3A), and transient impulse coupling (S1) are fully reported, analyzed, and plotted.
+2. **We Do Not Hide Negative Results:** Catastrophic filter lockouts (S2), covariance starvation (S3A/S4), mounting yaw failures (Y1), and cornering lever-arm perturbations (VTA2) are fully reported, analyzed, and plotted.
 3. **We Do Not Treat Reference Data as Divine Truth:** VBOX reference data is recognized as an imperfect physical measurement system with its own error characteristics.
-4. **We Do Not Tune Parameters Post-Hoc:** All ZUPT detector thresholds and filter covariance matrices were declared and frozen before real-data benchmarking.
+4. **We Do Not Tune Parameters Post-Hoc:** All detector thresholds and filter covariance matrices were declared and frozen before real-data benchmarking.
 5. **We Do Not Claim Universal Navigation Accuracy:** Consumer smartphone IMUs cannot provide autonomous long-duration navigation without external aiding.
+6. **We Do Not Claim Live Edge Execution for Web Replays:** The interactive web cockpit is explicitly documented as a telemetry simulation/replay UI.
 
 ---
 
-## 22 — Appendices
+## 26 — Appendices
 
 ### Appendix A: State Vector & Error-State Definitions
 - Nominal State: $\mathbf{x} = [\mathbf{p}^n, \mathbf{v}^n, \mathbf{q}_b^n, \mathbf{b}_a, \mathbf{b}_g]^T \in \mathbb{R}^{16}$
@@ -704,20 +691,27 @@ To distinguish NAVRIS from superficial or marketing-driven AI projects, we expli
 - Hamilton convention: $ij = k$, $q = [q_w, q_x, q_y, q_z]^T = [q_w, \mathbf{q}_v^T]^T$.
 - Quaternion multiplication:
   $$\mathbf{p} \otimes \mathbf{q} = \begin{bmatrix} p_w q_w - \mathbf{p}_v \cdot \mathbf{q}_v \\ p_w \mathbf{q}_v + q_w \mathbf{p}_v + \mathbf{p}_v \times \mathbf{q}_v \end{bmatrix}$$
-- Rotation of vector $\mathbf{v}$:
-  $$\mathbf{v}' = \mathbf{q} \otimes \begin{bmatrix} 0 \\ \mathbf{v} \end{bmatrix} \otimes \mathbf{q}^*$$
 
 ### Appendix D: ESKF Propagation & Continuous-Time Jacobians
 Detailed in Section 08 and [`docs/phase2_3_eskf_core.md`](docs/phase2_3_eskf_core.md).
 
-### Appendix E: Causal ZUPT Detector Parameters
+### Appendix E: Causal ZUPT Detector Specification
 - Window length: $W = 8$ (0.8 s)
 - Confirmation dwell: $D = 5$ (0.5 s)
 - $\text{var}(\|\mathbf{f}\|) \le 0.005\text{ m}^2/\text{s}^4$
 - $\text{var}(\|\boldsymbol{\omega}\|) \le 1.0\times 10^{-4}\text{ rad}^2/\text{s}^2$
 - $|\|\bar{\mathbf{f}}\| - g| \le 0.40\text{ m/s}^2$
 
-### Appendix F: Pre-Declared Filter Configuration Parameters
+### Appendix F: Causal NHC Model & Jacobian Specification
+- Forward speed: $v_x^v = \mathbf{e}_1^T \mathbf{C}_b^v (\mathbf{C}_b^n)^T \mathbf{v}^n \ge 1.5\text{ m/s}$
+- Turn-rate threshold: $\|\boldsymbol{\omega}_b\| \le 0.087\text{ rad/s}$ ($5.0^\circ/\text{s}$)
+- Specific force deviation: $|\|\mathbf{f}_b\| - g| \le 1.0\text{ m/s}^2$
+- $\mathbf{H}_v = \mathbf{M} \mathbf{C}_b^v (\mathbf{C}_b^n)^T \in \mathbb{R}^{2\times 3}$
+- $\mathbf{H}_\theta = \mathbf{M} \mathbf{C}_b^v (\mathbf{C}_b^n)^T [\mathbf{v}^n]_\times \in \mathbb{R}^{2\times 3}$
+- $\mathbf{R}_{\text{nhc}} = \text{diag}(0.0625, 0.0225)\text{ m}^2/\text{s}^2$
+- 2-DOF $\chi^2 \le 13.82$
+
+### Appendix G: Pre-Declared Filter Configuration Parameters
 - $\sigma_{\text{acc}} = 0.20\text{ m/s}^2$
 - $\sigma_{\text{gyr}} = 0.02\text{ rad/s}$
 - $\sigma_{ba} = 1.0\times 10^{-3}\text{ m/s}^2/\sqrt{\text{s}}$
@@ -727,18 +721,22 @@ Detailed in Section 08 and [`docs/phase2_3_eskf_core.md`](docs/phase2_3_eskf_cor
 - $\sigma_{\text{zupt}} = 0.05\text{ m/s}$
 - $\chi^2_{\text{pos,thresh}} = 16.27$
 - $\chi^2_{\text{zupt,thresh}} = 16.27$
+- $\chi^2_{\text{nhc,thresh}} = 13.82$
 
-### Appendix G: Complete Multi-Recording Benchmark Tables
-Detailed in Section 11 and [`data/processed/phase2_3b/gate2_3a/phase7_scientific_audit.csv`](data/processed/phase2_3b/gate2_3a/phase7_scientific_audit.csv).
+### Appendix H: Complete Multi-Recording Benchmark Tables
+Detailed in Sections 11 and 13, and stored in:
+- `data/processed/phase2_3b/gate2_3a/phase7_scientific_audit.csv`
+- `data/processed/phase2_3b/gate2_3b/gate2_3b_summary.csv`
 
-### Appendix H: Test Suite & Verification Matrix
+### Appendix I: Test Suite & Verification Matrix
 - `tests/test_coords.py`: 8 tests (WGS-84 $\to$ ENU round-trip $<10^{-4}\text{ m}$)
 - `tests/test_ingest.py`: 12 tests (Canonical units, speed sanitization)
 - `tests/test_sync.py`: 10 tests (Cross-correlation lag estimation)
 - `tests/test_calibration.py`: 18 tests (Methods A, B, D orthonormal matrices)
 - `tests/test_eskf.py`: 38 tests (Van Loan, Joseph updates, chi-square gating)
 - `tests/test_zupt.py`: 13 tests (Causal detector dwell, synthetic ZUPT nulling)
-- **Total: 99 / 99 PASSING**
+- `tests/test_nhc.py`: 20 tests (Analytical Jacobian, finite-difference verification, causal detector)
+- **Total: 119 / 119 PASSING**
 
 ---
 
