@@ -1,12 +1,13 @@
 # NAVRIS
 ### Intelligent Navigation & Inertial System
 
-**Disciplined, physics-grounded inertial navigation and multi-sensor fusion for ground vehicles under degraded and denied GNSS.**
+**AI-ML assisted vehicle navigation for maintaining navigation continuity during GNSS degradation and temporary outages.**
 
 [![Test Suite](https://img.shields.io/badge/pytest-176%20passed-brightgreen.svg)](tests/)
 [![Python](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12-blue.svg)](pyproject.toml)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 [![Research Status](https://img.shields.io/badge/Research%20Status-Phase%203.3B%20(Partially%20Supported)-yellow.svg)](docs/phase3_3b_ml_generalization.md)
+[![Technical Report](https://img.shields.io/badge/Report-PDF%20(Evaluator%20Copy)-red.svg)](docs/NAVRIS_Technical_Report.pdf)
 [![Frontend](https://img.shields.io/badge/Frontend-React%20%7C%20TypeScript-informational.svg)](https://github.com/ptlrudra0/TBA)
 
 > **Smart India Hackathon (SIH) 2026**
@@ -18,102 +19,193 @@
 
 ### Quick Links
 
-[🚀 Frontend](#-frontend) • [📊 Benchmark Results](#-real-data-benchmark-results) • [📖 Full Research Report (REPORT.md)](REPORT.md) • [💻 Frontend Repository (TBA)](https://github.com/ptlrudra0/TBA) • [🔬 Reproduce](#-reproduce-the-research)
+[📖 Project Overview](#project-overview) • [🛠️ Proposed Solution](#proposed-solution) • [📑 Current Research Status](#current-research-status) • [📊 Benchmark Results](#-benchmark-results--phase-33b-evaluation) • [📄 Technical Report PDF](docs/NAVRIS_Technical_Report.pdf) • [💻 Frontend Repository (TBA)](https://github.com/ptlrudra0/TBA) • [🔬 Reproduce](#-reproduce-the-research)
 
 ---
 
-## 🚀 Frontend
+## Project Overview
 
-The NAVRIS research and replay interface is maintained in a separate frontend repository: [TBA — Frontend](https://github.com/ptlrudra0/TBA). Frontend developed and maintained in collaboration with Rudra Patel.
+**NAVRIS** (Intelligent Navigation & Inertial System) is a disciplined, physics-grounded multi-sensor fusion system designed to maintain land-vehicle positioning continuity when satellite navigation (GNSS) is degraded or completely unavailable.
 
-### Backend API & Frontend Replay Integration
-NAVRIS provides a FastAPI backend service (`src/navris/api/main.py`) that serves benchmark telemetry, full 10 Hz trajectory replay frames, and audit events to the TBA frontend over `/api/v1/nav/*`.
-- **Mode:** Research / Replay mode (evaluating real IO-VNBD benchmark sequences; not live vehicle navigation).
-- **Backend Startup:**
-  ```powershell
-  $env:PYTHONPATH = "src"
-  python -m uvicorn navris.api.main:app --host 0.0.0.0 --port 8000
-  ```
-- **Frontend Startup (in TBA repository):**
-  ```bash
-  npm run dev
-  ```
-  The Vite dev server proxies `/api` calls directly to `http://127.0.0.1:8000`.
-
-> [!IMPORTANT]
-> **Research & Replay Mode Notice:**
-> The web cockpit supports two operational modes: client-side synthetic simulation and NAVRIS research/replay mode. In research mode, the interface renders post-processed trajectory solutions and innovation events from the Oxford IO-VNBD dataset. It is **not** connected to live vehicle hardware or a live GNSS receiver and does **not** claim real-world production or operational navigation readiness. All quantitative navigation benchmarks are evaluated strictly in Python on the real Oxford IO-VNBD dataset.
+* **The Problem:** Modern vehicle navigation relies almost entirely on GNSS. In urban canyons, underpasses, highway tunnels, and under intentional or environmental interference, satellite signals suffer severe multipath, latency, or total blackout.
+* **Why Inertial Navigation & Fusion:** Consumer smartphones contain low-cost micro-electro-mechanical systems (MEMS) accelerometers and gyroscopes. However, unassisted inertial dead reckoning suffers from runaway cubic error growth, rendering raw double integration useless after tens of seconds.
+* **Where AI/ML Fits:** Instead of using end-to-end "black-box" neural networks that fail unpredictably out-of-distribution, NAVRIS maintains a mathematically verified classical 15-state Error-State Extended Kalman Filter (ESKF) at its core. Machine learning (XGBoost) is applied strictly to estimate forward longitudinal speed from causal trailing IMU windows, protected by an absolute reference firewall and two-stage statistical gating before filter injection.
 
 ---
 
-## 1. Problem & Motivation
+## Problem Statement
 
-Modern intelligent transportation systems and smart vehicles require seamless, high-integrity positioning. While Global Navigation Satellite Systems (GNSS) provide absolute geographic coordinates, satellite signals are vulnerable to multipath distortion, urban canyon occlusion, tunnel dropouts, and atmospheric disruption.
-
-Consumer smartphones contain low-cost micro-electro-mechanical (MEMS) accelerometers and gyroscopes. However, unassisted consumer inertial dead reckoning suffers from rapid, runaway cubic error divergence:
-* **Sensor Drift:** Accelerometer biases ($0.02 - 0.05\text{ m/s}^2$) and gyroscope thermal walk ($0.001\text{ rad/s}$) cause position errors to exceed hundreds of meters within 20 seconds, and millions of meters over multi-hour drives.
-* **Sparse Consumer GNSS:** Smartphone GNSS fixes arrive at low and irregular rates ($\approx 0.1 - 1\text{ Hz}$) with high latency and dropouts.
-* **Arbitrary 3D Phone Orientation:** Smartphones rest in arbitrary, uncalibrated orientations inside the vehicle cabin.
-
-Rather than training "black-box" neural networks directly on uncalibrated, drifting IMU streams, **NAVRIS** implements a disciplined scientific pipeline:
-1. Establish a mathematically verified 15-state Error-State Kalman Filter (ESKF) baseline.
-2. Incorporate strictly causal kinematic constraints: Zero-Velocity Updates (ZUPT) for standstills and Non-Holonomic Constraints (NHC) for cruising motion.
-3. Rigorously characterize multi-route failure modes before introducing machine-learned residual models.
+When satellite signals drop out, consumer vehicles must rely on dead reckoning. Consumer-grade MEMS sensors embedded in commodity smartphones introduce extreme stochastic challenges:
+1. **Accelerated Divergence:** Sensor bias drifts ($0.02 - 0.05\text{ m/s}^2$) and gyroscope thermal walk ($0.001\text{ rad/s}$) produce cubic position error divergence:
+   $$\Delta p(t) \approx \frac{1}{2} b_a t^2 + \frac{1}{6} (b_g \times g) t^3$$
+   Without aiding, position errors exceed hundreds of meters within 20–60 seconds, and reach hundreds of kilometers over prolonged driving.
+2. **Arbitrary 3D Phone Mounting:** The smartphone rests in arbitrary, uncalibrated orientations inside the vehicle cabin rather than aligned to chassis axes.
+3. **Sparse, High-Latency GNSS Fixes:** Consumer smartphone GNSS fixes arrive at low, irregular rates ($\approx 0.1 - 1\text{ Hz}$) with high latency and sudden dropout boundaries.
 
 ---
 
-## 2. System Architecture
+## Proposed Solution
 
-```mermaid
-flowchart TD
-    subgraph DataInput ["1. Multi-Sensor Data Ingestion"]
-        A1["Raw Smartphone IMU<br/>(10 Hz Accel / Gyro)"]
-        A2["Sparse GNSS Fixes<br/>(0.1 - 1 Hz Lat/Lon/Alt)"]
-    end
+NAVRIS implements a hybrid fusion architecture integrating classical state estimation with causal machine-learned pseudo-measurements:
 
-    subgraph Preprocessing ["2. Preprocessing & Calibration"]
-        B1["WGS-84 to Local ENU<br/>Tangent Projection"]
-        B2["Causal Extrinsic Calibration<br/>Gravity Leveling + Mounting Yaw"]
-        A1 --> B1
-        A2 --> B1
-        B1 --> B2
-    end
+```text
+GNSS Telemetry + Smartphone IMU (10 Hz Synchronized Pipeline)
+        ↓
+Sensor Preprocessing & Causal Extrinsic Calibration (Gravity Leveling + Mounting Yaw)
+        ↓
+Inertial Dead Reckoning (Quaternion Mechanization + Somigliana Normal Gravity)
+        ↓
+15-State Error-State Kalman Filter (P-Propagation via Van Loan Matrix Exponential)
+        ↓
+Causal Kinematic Constraints (ZUPT Stationary Nulling + NHC Lateral/Vertical Non-Slip)
+        ↓
+Causal ML Forward-Speed Estimation (Trailing 1.0 s IMU Window, XGBoost Regressor)
+        ↓
+Reliability Gate (P(reliable) ≥ 0.70) + Innovation Gate (χ² ≤ 9.21)
+        ↓
+ML Forward-Speed Pseudo-Measurement Update (Fixed Covariance R_ML = 0.50 m²/s²)
+        ↓
+High-Integrity Navigation Output & Replay Telemetry Service (FastAPI / TBA Frontend)
+```
 
-    subgraph NavigationCore ["3. Classical Fusion Engine (Frozen ESKF Core)"]
-        C1["Strapdown IMU Propagation<br/>(Van Loan Discretization)"]
-        C2["15-State Error Covariance (P)<br/>(Joseph-Form Covariance Reset)"]
-        B2 --> C1
-        C1 --> C2
-    end
+> [!NOTE]
+> **Implementation Scope:** All blocks in this architecture are fully implemented and verified in Python research/replay mode on real Oxford IO-VNBD dataset recordings. Real-time on-device embedded smartphone execution is a target for future commercialization and is not claimed as currently deployed.
 
-    subgraph UpdateConstraints ["4. Strictly Causal Aiding Constraints"]
-        D1["GNSS Position Update<br/>(3-DOF Chi^2 Gating)"]
-        D2["Causal ZUPT Module<br/>(Trailing-Window Velocity Nulling)"]
-        D3["Causal NHC Module<br/>(Lateral & Vertical Non-Slip)"]
-        A2 -.-> D1
-        C1 --> D2
-        C1 --> D3
-        D1 --> C2
-        D2 --> C2
-        D3 --> C2
-    end
+---
 
-    subgraph StateOutput ["5. High-Integrity State Estimate"]
-        E1["Navigation State [p, v, q, ba, bg]"]
-        C2 --> E1
-    end
+## Key Technologies
 
-    subgraph WebCockpit ["6. Interactive Visualization"]
-        F1["NAVRIS Web Cockpit<br/>(Telemetry & Replay Demo)"]
-        E1 -.->|Replay Export| F1
-    end
+The NAVRIS repository contains only technologies that are actually implemented, tested, and verified:
+
+* **Core Language:** Python 3.10+
+* **Numerical & Scientific Libraries:** NumPy, SciPy, Pandas
+* **Machine Learning:** scikit-learn, XGBoost
+* **Backend API & Service:** FastAPI, Uvicorn (serving `/api/v1/nav/*`)
+* **State Estimation:** 15-State Continuous-Discrete Error-State Extended Kalman Filter (ESKF)
+* **Attitude Representation:** Unit quaternion kinematics with zeroth-order rotational integration
+* **Matrix Discretization:** Van Loan matrix exponential method for state transition $(\Phi)$ and process noise $(Q_d)$
+* **Kinematic Constraints:** Causal Zero-Velocity Updates (ZUPT) and analytical Non-Holonomic Constraints (NHC)
+* **Causal Feature Engineering:** Trailing temporal sliding windows ($W = 10\text{ samples} = 1.0\text{ s}$) with strict anti-circularity
+* **Benchmark Telemetry:** Oxford Intelligent Orienting & Vehicle Navigation Benchmark Dataset (IO-VNBD)
+* **Frontend Cockpit Integration:** React, TypeScript, Vite ([ptlrudra0/TBA](https://github.com/ptlrudra0/TBA))
+
+---
+
+## Current Research Status
+
+### Phase 3.3B — PARTIALLY SUPPORTED
+
+> The frozen ML forward-speed pseudo-measurement reduced horizontal RMSE relative to the frozen baseline on all seven evaluated recordings, including the two held-out test-domain recordings. However, the magnitude and quality of the effect varied substantially by recording, and large absolute spatial errors remained on several long-duration sequences.
+
+**Explicit Scope & Transparency Qualifications:**
+* **Research / Replay Validation:** Evaluated in offline replay on pre-recorded benchmark sequences; not connected to live vehicle hardware.
+* **Operational Navigation Accuracy:** Has **NOT** been established.
+* **Production Readiness:** Has **NOT** been established.
+* **Uniform Generalization:** Has **NOT** been established across arbitrary vehicle models or road conditions.
+* **Vehicle / Platform Independence:** Has **NOT** been established (evaluation limited to passenger cars in IO-VNBD).
+
+*Marketing language such as "solved", "breakthrough", "guaranteed", "robust everywhere", "production-ready", or "zero drift" is explicitly rejected in accordance with scientific integrity.*
+
+---
+
+## 📊 Benchmark Results — Phase 3.3B Evaluation
+
+All evaluations benchmark real telemetry from the Oxford **IO-VNBD** dataset across seven driving recordings comparing the frozen classical baseline (Arm A: ESKF + ZUPT + NHC) against the ML pseudo-measurement aided filter (Arm C: Baseline + Causal ML Forward-Speed Pseudo-Measurement with fixed $R_{\text{ML}} = 0.50\text{ m}^2/\text{s}^2$):
+
+| Recording | Domain | Baseline H-RMSE | Arm C H-RMSE | Δ vs Baseline | Classification |
+| :--- | :--- | ---: | ---: | :---: | :--- |
+| **S1** | Train | 11,580,767.64 m | 2,230.98 m | -99.98% | Large relative reduction |
+| **S2** | Train | 42,389,910.67 m | 17,646,092.96 m | -58.37% | High rejection (54.7% NIS rej) |
+| **S3A** | Validation | 620,666.46 m | 9,310.67 m | -98.50% | Substantial reduction |
+| **S4** | Train | 37,351,981.92 m | 3,060.08 m | -99.99% | Large relative reduction |
+| **Y1** | Held-out Test | 29,884,134.11 m | 3,209,429.27 m | -89.26% | Reduced, large residual error |
+| **VTA1A** | Validation | 1,480,088.21 m | 21,683.94 m | -98.54% | Substantial reduction |
+| **VTA2** | Held-out Test | 31,080.62 m | 4,793.30 m | -84.58% | Bounded spatial error |
+
+> [!CAUTION]
+> **Scientific Interpretation:**
+> Relative reductions are measured against severely divergent frozen baselines (where unassisted inertial dead reckoning diverges by tens of thousands of kilometers due to uncorrected sensor bias double-integration); **they should not be interpreted as operational navigation accuracy**. Absolute spatial errors of 2.2 km to 17,646 km demonstrate that consumer inertial dead reckoning without external position fixes remains unviable for standalone long-duration navigation.
+
+> [!NOTE]
+> **Recording S2 Anomaly:**
+> S2 exhibited substantially different ML measurement behavior, including 54.67% NIS rejection and an applied innovation RMSE of 743.69 m/s, demonstrating significant recording/regime dependence.
+
+---
+
+## Research Pipeline
+
+NAVRIS follows a strictly sequential, gate-verified research methodology:
+
+```text
+Phase 0   — Dataset Forensics (564 IO-VNBD files audited; 3.6x speed bug resolved)
+Phase 1   — Ingestion / Cleaning / Synchronization (10 Hz causal cross-correlation)
+Phase 2   — Classical Navigation & Sensor Fusion (15-state continuous-discrete ESKF)
+Phase 2.3A — ESKF Validation (Synthetic trajectory validation & Joseph updates)
+Phase 2.3A — ZUPT (Causal stationary detector & velocity nulling)
+Phase 2.3B — NHC (Lateral & vertical non-slip body constraints)
+Phase 3.0 — Preliminary ML Residual Study (Residual observability & leakage audit)
+Phase 3.1 — Target Observability Study (Forward-speed vs full velocity vector)
+Phase 3.2 — Forward-Speed ML (Causal trailing-window feature extraction)
+Phase 3.2A — Domain Robustness (Multi-route driver-isolated validation)
+Phase 3.2B — Multi-Source Speed Estimation (Auxiliary kinematic features)
+Phase 3.2C — ML Reliability / Gating (Reliability classifier P >= 0.70)
+Phase 3.3A — ML Pseudo-Measurement (Controlled 2-route audit & Jacobian verification)
+Phase 3.3B — Frozen Generalization Benchmark (7-recording benchmark; PARTIALLY SUPPORTED)
 ```
 
 ---
 
-## 3. What is Real vs. What is Simulated
+## Technical Report
 
-To maintain complete scientific and engineering transparency for SIH evaluation, the table below delineates implemented components from planned research:
+The complete, evaluator-facing technical report covering the full theoretical derivation, implementation, and empirical audit is available as a compiled PDF document:
+
+📄 **[Download / View the NAVRIS Technical & Research Report](docs/NAVRIS_Technical_Report.pdf)**
+
+*The report covers all 24 technical dimensions including mathematical formulations, Van Loan discretization derivations, causal ZUPT/NHC Jacobians, ML feature engineering schemas, two-stage innovation gating proofs, empirical multi-recording benchmark tables, trajectory plots, and failure analyses.*
+
+---
+
+## 💻 Frontend & Interactive Cockpit
+
+The NAVRIS research and replay interface is maintained in a separate frontend repository:
+
+🌐 **[TBA — Frontend](https://github.com/ptlrudra0/TBA)**
+*Developed and maintained in collaboration with Rudra Patel ([@ptlrudra0](https://github.com/ptlrudra0)).*
+
+### Operational Modes
+
+The project maintains strict boundaries between simulation, replay, and live operation:
+
+1. **Demo / Simulation Mode:**
+   * Browser-side deterministic simulation running client-side in TypeScript.
+   * Generates synthetic telemetry along a demonstration track to illustrate navigation states, uncertainty envelopes, and simulated outages.
+   * Operates completely standalone without backend requirements.
+
+2. **NAVRIS Research / Replay Mode:**
+   * Replays real Oxford IO-VNBD vehicle benchmark telemetry processed by the NAVRIS navigation engine (15-state ESKF with ZUPT, NHC, and ML pseudo-measurements).
+   * Telemetry, full 10 Hz trajectory frames, error bounds, and innovation events are served by the FastAPI backend (`src/navris/api/main.py`) over `/api/v1/nav/*`.
+   * Connected via the `NavrisAdapter` (`src/navrisAdapter.ts`).
+
+3. **Live Navigation:**
+   * **Not currently implemented.** NAVRIS does not stream live smartphone hardware in this release. Research replay is strictly distinguished from real-time vehicle guidance.
+
+### Running Backend & Frontend Together
+
+1. **Start the NAVRIS FastAPI Replay Backend** (from this repository):
+   ```powershell
+   $env:PYTHONPATH = "src"
+   python -m uvicorn navris.api.main:app --host 0.0.0.0 --port 8000
+   ```
+2. **Start the TBA Frontend Dev Server** (from the TBA repository):
+   ```bash
+   cd ../TBA
+   npm run dev
+   ```
+   Open `http://localhost:5173`. Click the mode button in the header to toggle between **DEMO / SIMULATION** and **RESEARCH / REPLAY**.
+
+---
+
+## What is Real vs. What is Simulated
 
 | Component | Implementation Status | Evidence / Artifact Location |
 | :--- | :--- | :--- |
@@ -134,193 +226,7 @@ To maintain complete scientific and engineering transparency for SIH evaluation,
 
 ---
 
-## 4. Research Roadmap & Milestone Progress
-
-```text
-NAVRIS Standardized Research Roadmap:
-├── [x] Phase 0: Dataset Forensics (564 IO-VNBD files audited; 3.6x speed bug resolved)
-├── [x] Phase 1: Ingestion & 10 Hz Synchronization Pipeline
-├── [x] Phase 2: Classical Navigation Core
-│   ├── [x] Gate 2.1: Causal Sensor-to-Vehicle Extrinsic Calibration
-│   ├── [x] Gate 2.2: Multi-Recording ESKF Benchmark (8 routes)
-│   ├── [x] Gate 2.3A: Causal ZUPT A/B Benchmark & Audit (49,672 updates)
-│   └── [x] Gate 2.3B: Non-Holonomic Constraints (NHC) Implementation & A/B Benchmark
-├── [x] Phase 3: Machine-Learned Speed & Kinematic Pseudo-Measurement
-│   ├── [x] Phase 3.1: ML Model Architecture & Causal Windowing
-│   ├── [x] Phase 3.2: Frozen Baseline Reproduction & Firewall Protocol
-│   ├── [x] Phase 3.3A: Controlled Pseudo-Measurement Integration Audit
-│   └── [x] Phase 3.3B: Broader Generalization Benchmark (PARTIALLY SUPPORTED)
-└── [ ] Phase 4: Embedded Edge Inference & Android Deployment
-```
-
----
-
-## 5. 📊 Real-Data Benchmark Results
-
-All benchmarks evaluate real vehicle telemetry from the public Oxford **IO-VNBD** dataset across 8 distinct routes comparing:
-* **Gate 2.2 Baseline:** Calibrated ESKF + GNSS (No ZUPT, No NHC).
-* **Gate 2.3A Experiment:** Calibrated ESKF + GNSS + Causal ZUPT.
-* **Gate 2.3B Experiment:** Calibrated ESKF + GNSS + Causal ZUPT + Causal NHC.
-
-### Benchmark Comparison Across Evaluated Routes
-
-| Recording | Environment | Duration | Gate 2.2 Baseline H-RMSE | Gate 2.3A (ZUPT) H-RMSE | Gate 2.3B (NHC) H-RMSE | Gate 2.3B vs Baseline Δ% | Classification |
-| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :--- |
-| **S3A** | Urban / Arterial | 2,171.0 s | 110,485 m | 2,346,828 m | **620,666 m** | **-73.55% vs ZUPT** | **Improvement observed** |
-| **VTA1A** | Continuous Highway | 2,489.4 s | 1,818,010 m | 2,260,452 m | **1,480,088 m** | **-34.52% vs ZUPT** | **Diagnostic evidence** |
-| **VTA2** | Suburban Arterial | 1,012.7 s | 12,544.15 m | **46.23 m** | 31,080.62 m | **-99.63% (ZUPT)** | **ZUPT Improvement / NHC Degradation** |
-| **S1** | Mixed Suburban | 5,018.2 s | 36,695,857 m | **6,178,807 m** | 11,580,768 m | **-68.44% vs Base** | **Mixed evidence** |
-| **S2** | Long Highway | 9,190.7 s | **16,055,424 m** | 26,126,179 m | 42,389,911 m | +62.25% vs ZUPT | **Mixed evidence (Vel bounded, heading unobs)** |
-| **S4** | Mixed Arterial | 9,290.1 s | 48,599,675 m | **20,132,520 m** | 37,351,982 m | **-23.14% vs Base** | **Degradation observed vs ZUPT** |
-| **Y1** | Highway / Straight | 7,175.8 s | 4,102,231 m | **3,661,814 m** | 29,884,134 m | +716.10% vs ZUPT | **Degradation observed (Yaw offset)** |
-| **M** | High Vibration | 10,596.4 s | N/A | N/A | N/A | N/A | **Unobservable (Class F)** |
-
----
-
-### Key Empirical Findings
-
-1. **VTA2 Standstill Velocity Bounding Under ZUPT:**
-   On recording VTA2, when heading is observable, adding causal ZUPT reduced horizontal RMSE from approximately **$12.5\text{ km}$ to $46.2\text{ m}$** (**$99.63\%$ error reduction**) with final position error of **$5.11\text{ m}$**.
-   > *Scientific Qualification:* This is a recording-specific experimental result where traffic stops provided regular observability. It is **not** a guarantee of $46\text{ m}$ accuracy across arbitrary driving conditions.
-
-2. **S3A Trajectory Improvement Observed Under NHC:**
-   On recording S3A, adding Non-Holonomic Constraints during motion reduced horizontal RMSE from **$2.35\text{M m}$ to $620\text{k m}$** (**$73.55\%$ error reduction**), and velocity RMSE from $7,052\text{ m/s}$ to $1,428\text{ m/s}$ (**$-79.76\%$**), accepting 4,039 updates with a median NIS of $1.60$.
-
-3. **VTA1A Diagnostic Observation in Highway Cruising:**
-   VTA1A served as a negative-control route for the earlier Gate 2.3A ZUPT experiment because it contained no post-departure stationary intervals. Under Gate 2.3B, NHC engaged during high-speed cruise (426 updates accepted), showing an observed reduction in horizontal RMSE of **$34.52\%$** (from $2.26\text{M m}$ to $1.48\text{M m}$) and velocity RMSE of **$39.50\%$**. This provides diagnostic evidence of in-motion lateral velocity bounding, though not independent proof of universal generalization.
-
----
-
-### Observed Failure Modes and Hypotheses
-
-A central requirement of rigorous engineering research is identifying exactly where, why, and how classical filters fail:
-
-```text
-Documented Failure Mechanisms:
-├── 1. Phone-to-Vehicle Mounting Yaw Error (Recording Y1)
-│   └── Finding: In Y1, Method B calibration fell back to identity. The phone was mounted rotated
-│       ~106° relative to the vehicle chassis. Applying NHC forced longitudinal forward speed
-│       into the perceived lateral axis, injecting correlated error that caused +716% divergence.
-├── 2. Covariance Starvation (Recordings S1, S2, S4)
-│   └── Finding: Applying continuous 10 Hz updates without a minimum variance floor reduced
-│       covariance eigenvalues down to 1e-10 to 1e-12. This observed association is consistent
-│       with covariance over-confidence/starvation leading to subsequent GNSS gate rejections;
-│       further isolation is required to establish causality.
-└── 3. Turn Dynamics & Lever-Arm Perturbations (Recording VTA2)
-    └── Finding: On VTA2, frequent 90° cornering turns are hypothesized to induce lever-arm tangential
-        velocity (omega x r) perturbations during turn transitions, which were associated with
-        subsequent GNSS innovation gate rejections (486 fixes rejected).
-```
-
----
-
-### Phase 3.3B — ML Forward-Speed Pseudo-Measurement Benchmark
-
-**Research Status: PARTIALLY SUPPORTED**
-
-In Phase 3.3B, the frozen causal ML forward-speed pseudo-measurement model was evaluated across 7 IO-VNBD benchmark sequences with strict scientific safeguards:
-* **Causality & Anti-Circularity:** Feature generation uses strictly trailing causal windows ($W=10$ frames = $1.0\text{ s}$). No VBOX or reference telemetry is accessible at inference time.
-* **VBOX Firewall & Fixed Covariance Protocol:** Fixed measurement variance $R_{\text{ML}} = 0.50\text{ m}^2/\text{s}^2$ with 2-DOF gating ($\chi^2 \le 9.21$).
-* **Observed Effect:** Horizontal RMSE was reduced relative to the frozen baseline across all seven evaluated recordings (S1, S2, S3A, S4, Y1, VTA1A, VTA2).
-* **Scientific Qualification & Limitations:** Absolute spatial errors remain large on several sequences. Uniform generalization, operational navigation accuracy, and platform independence have **not** been established. See the audited report in [`docs/phase3_3b_ml_generalization.md`](docs/phase3_3b_ml_generalization.md).
-
----
-
-## 6. Visual Evidence
-
-The diagnostic plots below were generated from real IO-VNBD telemetry:
-
-| Trajectory Tracking on S3A (-73.6% RMSE) | Horizontal Error vs. Time (S3A) |
-| :---: | :---: |
-| ![S3A Trajectory](docs/plots/gate2_3b/s3a_trajectory_comparison.png) | ![S3A Error](docs/plots/gate2_3b/s3a_horizontal_error_vs_time.png) |
-| *Figure 1: VBOX reference vs Baseline (ESKF+ZUPT) vs NHC Enabled on S3A.* | *Figure 2: Horizontal position error over 2,171s evaluation duration.* |
-
-| Negative-Control Error Bounding (VTA1A) | Cornering Lever-Arm Failure Mode (VTA2) |
-| :---: | :---: |
-| ![VTA1A Error](docs/plots/gate2_3b/vta1a_horizontal_error_vs_time.png) | ![VTA2 Failure](docs/plots/gate2_3b/vta2_failure_analysis.png) |
-| *Figure 3: VTA1A horizontal error reduction (-34.5%) observed during highway cruise.* | *Figure 4: VTA2 cornering dynamics associated with subsequent GNSS innovation gate rejection.* |
-
----
-
-## 7. ⚠️ What NAVRIS Does Not Claim
-
-To prevent over-claiming and maintain scientific integrity, NAVRIS explicitly states:
-
-* **No Universal Accuracy Guarantee:** NAVRIS does **not** claim universal sub-meter or $<5\text{ m}$ accuracy across arbitrary driving conditions.
-* **No GNSS Replacement:** Unassisted smartphone MEMS inertial sensors cannot replace GNSS for long-duration navigation; they provide bridging constraints during outages.
-* **No Unconditional NHC Benefit:** NHC is **not** a universal improvement. When mounting calibration is inaccurate (Y1) or cornering lever-arm dynamics dominate (VTA2), NHC can degrade navigation performance.
-* **No Operational Accuracy Claim for ML Pseudo-Measurement:** The Phase 3.3B ML forward-speed pseudo-measurement shows partially supported relative improvements over the frozen baseline, but does not establish operational navigation accuracy, uniform generalization across unseen routes, or platform independence.
-* **No Production Autonomous Driving Readiness:** NAVRIS is an applied research baseline for consumer smartphone sensors, not a production-grade autonomous driving system.
-* **No Live Hardware in Web Cockpit:** The current web cockpit uses simulated and replayed benchmark data for demonstration and does not prove real-world navigation performance.
-
----
-
-## 8. Technology Stack
-
-### Navigation & Research Core
-* **Language:** Python 3.10+
-* **Numerical & ML Libraries:** NumPy, SciPy, Pandas, scikit-learn, XGBoost
-* **Algorithms:** 15-State Continuous-Discrete ESKF, Van Loan Matrix Exponential Discretization, Causal ZUPT, Analytical NHC, Causal ML Forward-Speed Pseudo-Measurement, Somigliana Normal Gravity
-* **Backend API:** FastAPI, Uvicorn (`src/navris/api/main.py`)
-* **Testing:** pytest (176 verified deterministic tests)
-
-### Interactive Web Cockpit
-* **Frontend:** React, TypeScript, Vite
-* **Repository:** [https://github.com/ptlrudra0/TBA](https://github.com/ptlrudra0/TBA) (Developed and maintained by Rudra Patel)
-
----
-
-## 9. Repository Structure
-
-```text
-NAVRIS/
-├── .github/
-│   └── workflows/
-│       └── test.yml         # Automated GitHub Actions test workflow
-├── src/
-│   └── navris/
-│       ├── coords.py        # Geodetic / local ENU tangent projections
-│       ├── schema.py        # Canonical sensor schemas & metadata
-│       ├── ingest.py        # Raw data parsing & unit sanitization
-│       ├── sync.py          # Lag estimation & 10 Hz interpolation
-│       ├── windowing.py     # Causal temporal sliding windows
-│       ├── splitting.py     # Driver-isolated train/val/test splits
-│       ├── pipeline.py      # End-to-end dataset processing
-│       ├── calibration.py   # Methods A, B, D causal extrinsic calibration
-│       ├── inertial/        # Mechanization, frames, gravity, metrics
-│       ├── eskf/            # 15-state Error-State Kalman Filter core (Frozen)
-│       ├── zupt.py          # Causal stationary detector & ZUPT updates
-│       ├── nhc.py           # Causal NHC detector & analytical updates
-│       ├── ml/              # Causal ML speed estimators & reliability classifier
-│       └── api/             # FastAPI research telemetry & replay service
-│
-├── tests/                   # 176 deterministic unit, integration & synthetic validation tests
-├── scripts/                 # Reproducibility, audit, and benchmark scripts
-│   ├── run_gate2_2_benchmark.py
-│   ├── run_gate2_3a_zupt_benchmark.py
-│   ├── run_gate2_3b_nhc_benchmark.py
-│   ├── generate_gate2_3b_plots.py
-│   ├── generate_phase7_scientific_audit_plots.py
-│   └── phase3/              # Phase 3 ML benchmarking & reproduction scripts
-│       ├── train_phase3_models.py
-│       ├── run_phase3_3a_controlled_experiment.py
-│       └── run_phase3_3b_ml_generalization.py
-├── docs/                    # Research gate specifications & benchmark reports
-│   ├── phase2_3b_gate2_3b_nhc_design.md
-│   ├── phase2_3b_gate2_3b_real_data_benchmark.md
-│   ├── phase3_3a_scientific_audit.md
-│   ├── phase3_3b_ml_generalization.md
-│   └── plots/               # High-resolution benchmark figures
-├── pyproject.toml           # Standard Python package configuration
-├── requirements.txt         # Runtime and development dependencies
-├── REPORT.md                # Comprehensive Technical Research & Validation Report
-├── LICENSE                  # Apache License 2.0
-└── README.md
-```
-
----
-
-## 10. 🔬 Reproduce the Research
+## 🔬 Reproduce the Research
 
 All benchmark experiments are deterministic and fully reproducible from real sensor data:
 
@@ -335,7 +241,7 @@ source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 
 # 3. Install dependencies
 pip install -e .
-pip install pytest matplotlib
+pip install pytest matplotlib reportlab
 
 # 4. Verify test suite (176 tests)
 python -m pytest -q -o pythonpath=src tests/
@@ -350,16 +256,16 @@ python scripts/run_gate2_3a_zupt_benchmark.py
 # 7. Run Gate 2.3B Real-Data NHC A/B Benchmark
 python scripts/run_gate2_3b_nhc_benchmark.py
 
-# 8. Generate Gate 2.3B Diagnostic Plots
-python scripts/generate_gate2_3b_plots.py
-
-# 9. Run Phase 3.3B ML Generalization Benchmark
+# 8. Run Phase 3.3B ML Generalization Benchmark
 python scripts/phase3/run_phase3_3b_ml_generalization.py
+
+# 9. Generate Final Technical Report PDF
+python scripts/generate_pdf_report.py docs/NAVRIS_Technical_Report.pdf
 ```
 
 ---
 
-## 11. Team
+## Team
 
 * **Jay Patel** ([@the-jaypatel](https://github.com/the-jaypatel))
   *Role:* Lead Researcher & Navigation Engineer
@@ -378,7 +284,7 @@ python scripts/phase3/run_phase3_3b_ml_generalization.py
 
 ---
 
-## 12. References & Acknowledgments
+## References & Acknowledgments
 
 1. **IO-VNBD Dataset:** Oxford Intelligent Orienting & Vehicle Navigation Benchmark Dataset (Oxford Robotics Institute).
 2. **ESKF Mechanics:** Sola, J., *"Quaternion kinematics for the error-state Kalman filter"*, arXiv:1711.02508.
