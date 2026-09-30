@@ -3,35 +3,46 @@
 
 **Disciplined, physics-grounded inertial navigation and multi-sensor fusion for ground vehicles under degraded and denied GNSS.**
 
-[![Test Suite](https://img.shields.io/badge/pytest-119%20passed-brightgreen.svg)](tests/)
+[![Test Suite](https://img.shields.io/badge/pytest-176%20passed-brightgreen.svg)](tests/)
 [![Python](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12-blue.svg)](pyproject.toml)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
-[![Research Gate](https://img.shields.io/badge/Research%20Gate-Gate%202.3B%20(NHC%20Audited)-orange.svg)](docs/phase2_3b_gate2_3b_real_data_benchmark.md)
-[![Frontend](https://img.shields.io/badge/Cockpit-React%20%7C%20TypeScript-informational.svg)](https://github.com/Durva46/navris-sih-2026)
+[![Research Status](https://img.shields.io/badge/Research%20Status-Phase%203.3B%20(Partially%20Supported)-yellow.svg)](docs/phase3_3b_ml_generalization.md)
+[![Frontend](https://img.shields.io/badge/Frontend-React%20%7C%20TypeScript-informational.svg)](https://github.com/ptlrudra0/TBA)
 
-> **Smart India Hackathon (SIH) 2026**  
-> **Problem Statement ID:** 26168  
-> **Organization:** Indian Space Research Organisation (ISRO) / Department of Space  
-> **Theme:** Smart Vehicles | **Category:** Software  
+> **Smart India Hackathon (SIH) 2026**
+> **Problem Statement ID:** 26168
+> **Organization:** Indian Space Research Organisation (ISRO) / Department of Space
+> **Theme:** Smart Vehicles | **Category:** Software
 
 ---
 
 ### Quick Links
 
-[🚀 Live Demo](#-live-demo--web-cockpit) • [📊 Benchmark Results](#-real-data-benchmark-results) • [📖 Full Research Report (REPORT.md)](REPORT.md) • [💻 Frontend Repository](https://github.com/Durva46/navris-sih-2026) • [🔬 Reproduce](#-reproduce-the-research)
+[🚀 Frontend](#-frontend) • [📊 Benchmark Results](#-real-data-benchmark-results) • [📖 Full Research Report (REPORT.md)](REPORT.md) • [💻 Frontend Repository (TBA)](https://github.com/ptlrudra0/TBA) • [🔬 Reproduce](#-reproduce-the-research)
 
 ---
 
-## 🚀 Live Demo — Web Cockpit
+## 🚀 Frontend
 
-The NAVRIS interactive web cockpit provides real-time telemetry visualization, trajectory inspection, and sensor fusion replay.
+The NAVRIS research and replay interface is maintained in a separate frontend repository: [TBA — Frontend](https://github.com/ptlrudra0/TBA). Frontend developed and maintained in collaboration with Rudra Patel.
 
-* **Frontend Lead:** Durva Patel ([@Durva46](https://github.com/Durva46))
-* **Frontend Repository:** [https://github.com/Durva46/navris-sih-2026](https://github.com/Durva46/navris-sih-2026)
+### Backend API & Frontend Replay Integration
+NAVRIS provides a FastAPI backend service (`src/navris/api/main.py`) that serves benchmark telemetry, full 10 Hz trajectory replay frames, and audit events to the TBA frontend over `/api/v1/nav/*`.
+- **Mode:** Research / Replay mode (evaluating real IO-VNBD benchmark sequences; not live vehicle navigation).
+- **Backend Startup:**
+  ```powershell
+  $env:PYTHONPATH = "src"
+  python -m uvicorn navris.api.main:app --host 0.0.0.0 --port 8000
+  ```
+- **Frontend Startup (in TBA repository):**
+  ```bash
+  npm run dev
+  ```
+  The Vite dev server proxies `/api` calls directly to `http://127.0.0.1:8000`.
 
 > [!IMPORTANT]
-> **Demo Transparency Notice:**  
-> The current web cockpit operates on simulated and replayed trajectory data for interface and visualization demonstration. It is **not** connected to live on-device vehicle hardware and is **not** presented as evidence of real-world navigation accuracy. All quantitative navigation benchmarks are evaluated strictly in Python on the real Oxford IO-VNBD dataset.
+> **Research & Replay Mode Notice:**
+> The web cockpit supports two operational modes: client-side synthetic simulation and NAVRIS research/replay mode. In research mode, the interface renders post-processed trajectory solutions and innovation events from the Oxford IO-VNBD dataset. It is **not** connected to live vehicle hardware or a live GNSS receiver and does **not** claim real-world production or operational navigation readiness. All quantitative navigation benchmarks are evaluated strictly in Python on the real Oxford IO-VNBD dataset.
 
 ---
 
@@ -112,11 +123,12 @@ To maintain complete scientific and engineering transparency for SIH evaluation,
 | **Causal Extrinsic Calibration** | **Implemented** | Methods A, B, and D causal alignment (`src/navris/calibration.py`) |
 | **Causal ZUPT Module** | **Implemented** | Trailing-window detector + sequential update (`src/navris/zupt.py`) |
 | **Causal NHC Module** | **Implemented** | Speed/turn/shock detector + analytical Jacobian (`src/navris/nhc.py`) |
-| **Real-Data A/B Benchmarks** | **Implemented** | 8 IO-VNBD routes evaluated (`scripts/run_gate2_3b_nhc_benchmark.py`) |
-| **Deterministic Test Suite** | **Implemented** | 119 unit and synthetic validation tests passing (`tests/`) |
-| **Web Cockpit Demo** | **Implemented** | React/TypeScript replay dashboard ([Durva46/navris-sih-2026](https://github.com/Durva46/navris-sih-2026)) |
-| **Preliminary AI/ML Kinematics** | **Planned (Phase 3)** | Architecture designed in `REPORT.md`, unintegrated into real-time loop |
-| **Live Smartphone Socket** | **Simulated / Replay** | Replay data used for web demo; no live on-device socket in repository |
+| **ML Forward-Speed Pseudo-Measurement** | **Evaluated (Phase 3.3B)** | Partially supported generalization across 7 routes (`docs/phase3_3b_ml_generalization.md`) |
+| **FastAPI Replay Backend** | **Implemented** | 10 Hz replay stream and event endpoints (`src/navris/api/main.py`) |
+| **Real-Data A/B Benchmarks** | **Implemented** | 8 IO-VNBD routes evaluated (`scripts/run_gate2_3b_nhc_benchmark.py`, `scripts/phase3/`) |
+| **Deterministic Test Suite** | **Implemented** | 176 unit, integration, and synthetic validation tests passing (`tests/`) |
+| **Frontend Replay Cockpit** | **Implemented** | React/TypeScript replay dashboard ([ptlrudra0/TBA](https://github.com/ptlrudra0/TBA)) |
+| **Live Smartphone Socket** | **Simulated / Replay** | Replay data used for web interface; no live on-device socket in repository |
 | **Android On-Device Engine** | **Not Implemented** | Target for future commercialization roadmap |
 | **Map Matching** | **Not Implemented** | Pure inertial-GNSS dead reckoning without map constraints |
 
@@ -133,7 +145,11 @@ NAVRIS Standardized Research Roadmap:
 │   ├── [x] Gate 2.2: Multi-Recording ESKF Benchmark (8 routes)
 │   ├── [x] Gate 2.3A: Causal ZUPT A/B Benchmark & Audit (49,672 updates)
 │   └── [x] Gate 2.3B: Non-Holonomic Constraints (NHC) Implementation & A/B Benchmark
-├── [ ] Phase 3: Preliminary AI/ML Kinematic Layer (TCN / Residual Corrections)
+├── [x] Phase 3: Machine-Learned Speed & Kinematic Pseudo-Measurement
+│   ├── [x] Phase 3.1: ML Model Architecture & Causal Windowing
+│   ├── [x] Phase 3.2: Frozen Baseline Reproduction & Firewall Protocol
+│   ├── [x] Phase 3.3A: Controlled Pseudo-Measurement Integration Audit
+│   └── [x] Phase 3.3B: Broader Generalization Benchmark (PARTIALLY SUPPORTED)
 └── [ ] Phase 4: Embedded Edge Inference & Android Deployment
 ```
 
@@ -198,6 +214,18 @@ Documented Failure Mechanisms:
 
 ---
 
+### Phase 3.3B — ML Forward-Speed Pseudo-Measurement Benchmark
+
+**Research Status: PARTIALLY SUPPORTED**
+
+In Phase 3.3B, the frozen causal ML forward-speed pseudo-measurement model was evaluated across 7 IO-VNBD benchmark sequences with strict scientific safeguards:
+* **Causality & Anti-Circularity:** Feature generation uses strictly trailing causal windows ($W=10$ frames = $1.0\text{ s}$). No VBOX or reference telemetry is accessible at inference time.
+* **VBOX Firewall & Fixed Covariance Protocol:** Fixed measurement variance $R_{\text{ML}} = 0.50\text{ m}^2/\text{s}^2$ with 2-DOF gating ($\chi^2 \le 9.21$).
+* **Observed Effect:** Horizontal RMSE was reduced relative to the frozen baseline across all seven evaluated recordings (S1, S2, S3A, S4, Y1, VTA1A, VTA2).
+* **Scientific Qualification & Limitations:** Absolute spatial errors remain large on several sequences. Uniform generalization, operational navigation accuracy, and platform independence have **not** been established. See the audited report in [`docs/phase3_3b_ml_generalization.md`](docs/phase3_3b_ml_generalization.md).
+
+---
+
 ## 6. Visual Evidence
 
 The diagnostic plots below were generated from real IO-VNBD telemetry:
@@ -221,8 +249,9 @@ To prevent over-claiming and maintain scientific integrity, NAVRIS explicitly st
 * **No Universal Accuracy Guarantee:** NAVRIS does **not** claim universal sub-meter or $<5\text{ m}$ accuracy across arbitrary driving conditions.
 * **No GNSS Replacement:** Unassisted smartphone MEMS inertial sensors cannot replace GNSS for long-duration navigation; they provide bridging constraints during outages.
 * **No Unconditional NHC Benefit:** NHC is **not** a universal improvement. When mounting calibration is inaccurate (Y1) or cornering lever-arm dynamics dominate (VTA2), NHC can degrade navigation performance.
+* **No Operational Accuracy Claim for ML Pseudo-Measurement:** The Phase 3.3B ML forward-speed pseudo-measurement shows partially supported relative improvements over the frozen baseline, but does not establish operational navigation accuracy, uniform generalization across unseen routes, or platform independence.
 * **No Production Autonomous Driving Readiness:** NAVRIS is an applied research baseline for consumer smartphone sensors, not a production-grade autonomous driving system.
-* **No Live Hardware in Web Cockpit:** The current web cockpit uses simulated/replay data for demonstration and does not prove real-world navigation performance.
+* **No Live Hardware in Web Cockpit:** The current web cockpit uses simulated and replayed benchmark data for demonstration and does not prove real-world navigation performance.
 
 ---
 
@@ -230,13 +259,14 @@ To prevent over-claiming and maintain scientific integrity, NAVRIS explicitly st
 
 ### Navigation & Research Core
 * **Language:** Python 3.10+
-* **Numerical Libraries:** NumPy, SciPy, Pandas
-* **Algorithms:** 15-State Continuous-Discrete ESKF, Van Loan Matrix Exponential Discretization, Causal ZUPT, Analytical NHC, Somigliana Normal Gravity
-* **Testing:** pytest (119 verified deterministic tests)
+* **Numerical & ML Libraries:** NumPy, SciPy, Pandas, scikit-learn, XGBoost
+* **Algorithms:** 15-State Continuous-Discrete ESKF, Van Loan Matrix Exponential Discretization, Causal ZUPT, Analytical NHC, Causal ML Forward-Speed Pseudo-Measurement, Somigliana Normal Gravity
+* **Backend API:** FastAPI, Uvicorn (`src/navris/api/main.py`)
+* **Testing:** pytest (176 verified deterministic tests)
 
 ### Interactive Web Cockpit
 * **Frontend:** React, TypeScript, Vite
-* **Repository:** [https://github.com/Durva46/navris-sih-2026](https://github.com/Durva46/navris-sih-2026)
+* **Repository:** [https://github.com/ptlrudra0/TBA](https://github.com/ptlrudra0/TBA) (Developed and maintained by Rudra Patel)
 
 ---
 
@@ -260,18 +290,26 @@ NAVRIS/
 │       ├── inertial/        # Mechanization, frames, gravity, metrics
 │       ├── eskf/            # 15-state Error-State Kalman Filter core (Frozen)
 │       ├── zupt.py          # Causal stationary detector & ZUPT updates
-│       └── nhc.py           # Causal NHC detector & analytical updates
+│       ├── nhc.py           # Causal NHC detector & analytical updates
+│       ├── ml/              # Causal ML speed estimators & reliability classifier
+│       └── api/             # FastAPI research telemetry & replay service
 │
-├── tests/                   # 119 deterministic unit & synthetic validation tests
+├── tests/                   # 176 deterministic unit, integration & synthetic validation tests
 ├── scripts/                 # Reproducibility, audit, and benchmark scripts
 │   ├── run_gate2_2_benchmark.py
 │   ├── run_gate2_3a_zupt_benchmark.py
 │   ├── run_gate2_3b_nhc_benchmark.py
 │   ├── generate_gate2_3b_plots.py
-│   └── generate_phase7_scientific_audit_plots.py
+│   ├── generate_phase7_scientific_audit_plots.py
+│   └── phase3/              # Phase 3 ML benchmarking & reproduction scripts
+│       ├── train_phase3_models.py
+│       ├── run_phase3_3a_controlled_experiment.py
+│       └── run_phase3_3b_ml_generalization.py
 ├── docs/                    # Research gate specifications & benchmark reports
 │   ├── phase2_3b_gate2_3b_nhc_design.md
 │   ├── phase2_3b_gate2_3b_real_data_benchmark.md
+│   ├── phase3_3a_scientific_audit.md
+│   ├── phase3_3b_ml_generalization.md
 │   └── plots/               # High-resolution benchmark figures
 ├── pyproject.toml           # Standard Python package configuration
 ├── requirements.txt         # Runtime and development dependencies
@@ -299,9 +337,9 @@ source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 pip install -e .
 pip install pytest matplotlib
 
-# 4. Verify test suite (119 tests)
+# 4. Verify test suite (176 tests)
 python -m pytest -q -o pythonpath=src tests/
-# Verified output: 119 passed in ~9.9s
+# Verified output: 176 passed in ~12.5s
 
 # 5. Run Gate 2.2 Multi-Recording ESKF Benchmark
 python scripts/run_gate2_2_benchmark.py
@@ -314,22 +352,28 @@ python scripts/run_gate2_3b_nhc_benchmark.py
 
 # 8. Generate Gate 2.3B Diagnostic Plots
 python scripts/generate_gate2_3b_plots.py
+
+# 9. Run Phase 3.3B ML Generalization Benchmark
+python scripts/phase3/run_phase3_3b_ml_generalization.py
 ```
 
 ---
 
 ## 11. Team
 
-* **Jay Patel** ([@the-jaypatel](https://github.com/the-jaypatel))  
-  *Role:* Lead Researcher & Navigation Engineer  
-  *Responsibilities:* ESKF formulation, causal calibration, sensor fusion, error-state observability analysis, benchmark design, AI/ML kinematics research.
+* **Jay Patel** ([@the-jaypatel](https://github.com/the-jaypatel))
+  *Role:* Lead Researcher & Navigation Engineer
+  *Responsibilities:* Backend architecture, ESKF formulation, causal calibration, sensor fusion, error-state observability analysis, benchmark design, AI/ML kinematics research.
 
-* **Durva Patel** ([@Durva46](https://github.com/Durva46))  
-  *Role:* Frontend Engineer & UI/UX Designer  
-  *Responsibilities:* NAVRIS Web Cockpit development, interactive telemetry visualization, trajectory replay interface.  
-  *Repository:* [https://github.com/Durva46/navris-sih-2026](https://github.com/Durva46/navris-sih-2026)
+* **Rudra Patel** ([@ptlrudra0](https://github.com/ptlrudra0))
+  *Role:* Collaborator & Frontend Engineer
+  *Responsibilities:* Developer and maintainer of the TBA frontend repository ([https://github.com/ptlrudra0/TBA](https://github.com/ptlrudra0/TBA)), cockpit telemetry visualization, research/replay integration.
 
-* **SIH Team Members:**  
+* **Durva Patel** ([@Durva46](https://github.com/Durva46))
+  *Role:* UI/UX Design Contributor
+  *Responsibilities:* Initial UI/UX concepts and cockpit layouts.
+
+* **SIH Team Members:**
   *Participating Student Contributors (Smart India Hackathon 2026)*
 
 ---
